@@ -12,15 +12,17 @@ pub enum Tab {
     Orphans,
     History,
     Repos,
+    Stats,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 5] = [
+    pub const ALL: [Tab; 6] = [
         Tab::Installed,
         Tab::Updates,
         Tab::Orphans,
         Tab::History,
         Tab::Repos,
+        Tab::Stats,
     ];
 
     pub fn title(self) -> &'static str {
@@ -30,6 +32,7 @@ impl Tab {
             Tab::Orphans => "Órfãos",
             Tab::History => "Histórico",
             Tab::Repos => "Repos",
+            Tab::Stats => "Estatísticas",
         }
     }
 
@@ -55,6 +58,7 @@ pub enum Modal {
     Preview(Preview),
     Progress,
     Error(String),
+    Inspector,
 }
 
 #[derive(Debug, Default)]
@@ -70,6 +74,8 @@ pub struct Progress {
 #[derive(Debug)]
 pub enum Cmd {
     LoadAll,
+    /// Carrega metadados automáticos (arquivos + AppStream), com cache.
+    LoadMetadata(u64),
     LoadHistory,
     LoadOrphans,
     LoadDetails(String),
@@ -84,6 +90,7 @@ pub enum Cmd {
 #[derive(Debug)]
 pub enum AppEvent {
     Installed(Vec<Package>),
+    Metadata(Box<dnfm_core::metadata::TagCatalog>),
     Upgrades(Vec<Upgrade>),
     Orphans(Vec<Package>),
     History(Vec<HistoryEntry>),

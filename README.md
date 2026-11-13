@@ -52,6 +52,11 @@ dnfm remove --from-marks --yes          # aplicar (polkit pede a senha)
 dnfm orphans                            # dependências que ninguém mais requer
 dnfm history --limit 10                 # histórico de transações
 
+dnfm stats                              # estatísticas agregadas do sistema
+dnfm inspect vlc                        # metadados, tags e arquivos de um pacote
+dnfm inspect vlc --json | jq .tags      # idem, em JSON
+dnfm tags --limit 20                    # tags automáticas e contagens
+
 dnfm categories                         # categorias com contagem
 dnfm categories assign Multimídia vlc firefox
 dnfm list --category "TeX Live" --sort size
@@ -67,7 +72,7 @@ dnfm list --arch noarch --min-size 10M --group-by family
 | `a` / `u` | marca todos os visíveis / limpa marcações |
 | `p` | preview da remoção (marcados ou o atual) |
 | `P` | preview da atualização selecionada |
-| `enter` | detalhes (ou seleciona atualização) |
+| `enter` / `i` | inspetor do pacote (metadados, tags, arquivos, estado) |
 | `!` / `A` | seleciona atualizações de segurança / todas |
 | `/` | busca fuzzy por nome e resumo |
 | `o` / `O` | cicla o agrupamento (categoria, família, repo, motivo) |
@@ -79,6 +84,7 @@ dnfm list --arch noarch --min-size 10M --group-by family
 | `c` / `C` | filtra por categoria / família (seletor com busca) |
 | `t` / `T` | dá ou remove uma categoria própria |
 | `s` / `S` | cicla ordenação / inverte |
+| `m` (no inspetor) | fecha e marca o pacote |
 | `tab` | próxima aba |
 | `r` | recarrega |
 | `?` | ajuda |
@@ -111,6 +117,28 @@ com uma keybar contextual no rodapé.
 - **Mouse** — hover realça a linha, clique seleciona, clique na caixa marca,
   clique no cabeçalho ordena, clique na aba troca de aba, clique no chip remove
   o filtro e clique no sidebar filtra pelo grupo.
+
+## Metadados automáticos
+
+Categoria e tags vêm de quatro fontes, sem nada para o usuário preencher:
+
+| fonte | o que dá | cobertura medida |
+|---|---|---|
+| **AppStream** (`/usr/share/swcatalog/xml`) | categoria funcional oficial (`AudioVideo`, `Graphics`…) | 2,2% (177 de 8.009), que são os apps de GUI |
+| **arquivos `.desktop`** | mesma taxonomia para app fora do catálogo | poucos casos residuais |
+| **lista de arquivos** | tipo do pacote: comando, biblioteca, man, documentação, fonte, serviço, plugin | 100% |
+| **domínio da URL** | família de projeto (`tug.org` → TeX Live, `invent.kde.org` → KDE Plasma) | domínios conhecidos |
+
+A categoria de um pacote é escolhida nesta ordem: **categoria própria** do
+usuário > **AppStream** > **regra curada** por prefixo/palavra-chave > *Outros*.
+A família prefere o **domínio da URL** e só então o prefixo.
+
+As listas de arquivos custam ~3,5 s para 8.009 pacotes e o catálogo AppStream
+tem 8,4 MB comprimidos, então o resultado é gravado em
+`~/.cache/dnfm/metadata.json` e revalidado por uma impressão digital dos NEVRA
+instalados: paga-se uma vez por transação, não por sessão (`r` força o
+recálculo). Cada categoria/tag carrega a origem e a confiança, mostradas no
+inspetor.
 
 ## Categorias, agrupamento e filtros
 

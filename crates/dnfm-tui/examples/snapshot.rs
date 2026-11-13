@@ -250,6 +250,34 @@ fn demo() -> App {
     app
 }
 
+/// Catálogo de demonstração: AppStream para o vlc, arquivos para alguns.
+fn catalogo_demo() -> dnfm_core::TagCatalog {
+    let mut catalog = dnfm_core::TagCatalog::default();
+    catalog.appstream.insert(
+        "vlc".into(),
+        dnfm_core::metadata::AppStreamComponent {
+            id: "org.videolan.VLC.desktop".into(),
+            categories: vec!["AudioVideo".into(), "Player".into()],
+            summary: Some("Player de mídia".into()),
+        },
+    );
+    catalog.files.insert(
+        "vlc".into(),
+        dnfm_core::metadata::signals_from_paths([
+            "/usr/bin/vlc",
+            "/usr/bin/cvlc",
+            "/usr/share/applications/vlc.desktop",
+            "/usr/share/man/man1/vlc.1.gz",
+            "/usr/share/locale/pt_BR/LC_MESSAGES/vlc.mo",
+            "/usr/lib64/vlc/plugins/codec/libx264_plugin.so",
+            "/usr/lib64/vlc/plugins/codec/libx265_plugin.so",
+            "/usr/lib64/vlc/plugins/video_output/libgl_plugin.so",
+        ]),
+    );
+    catalog.families.insert("vlc".into(), "Multimídia".into());
+    catalog
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let path = args
@@ -260,8 +288,43 @@ fn main() {
     let height: u16 = args.get(3).and_then(|v| v.parse().ok()).unwrap_or(44);
 
     let mut app = demo();
-    if args.get(4).map(|v| v == "help").unwrap_or(false) {
-        app.open_modal(Modal::Help);
+    let modo = args.get(4).cloned().unwrap_or_default();
+    match modo.as_str() {
+        "help" => app.open_modal(Modal::Help),
+        "stats" => {
+            app.catalog = catalogo_demo();
+            app.rebuild_taxonomy();
+            app.tab = dnfm_tui::app::Tab::Stats;
+            app.ensure_stats();
+        }
+        "inspect" => {
+            app.catalog = catalogo_demo();
+            app.rebuild_taxonomy();
+            let pkg = app
+                .installed
+                .iter()
+                .find(|p| p.name == "vlc")
+                .cloned()
+                .expect("vlc na demonstração");
+            app.inspection = Some(dnfm_tui::app::Inspection {
+                categories: app.catalog.category_for(&pkg).into_iter().collect(),
+                tags: app.catalog.tags_for(&pkg),
+                files: app.catalog.file_info(&pkg.name).cloned(),
+                details: Some(dnfm_core::PackageDetails {
+                    nevra: pkg.nevra.clone(),
+                    url: "https://www.videolan.org/vlc/".into(),
+                    license: "GPL-2.0-or-later AND LGPL-2.1-or-later".into(),
+                    description: "VLC é um player multimídia livre e de código aberto que reproduz a maioria dos formatos de mídia, além de DVDs, CDs de áudio, VCDs e vários protocolos de streaming.".into(),
+                    vendor: "Fedora Project".into(),
+                    group: "Unspecified".into(),
+                }),
+                package: pkg,
+            });
+            app.open_modal(Modal::Inspector);
+            app.anim.open_modal();
+            app.anim.advance(0.6);
+        }
+        _ => {}
     }
 
     let backend = TestBackend::new(width, height);

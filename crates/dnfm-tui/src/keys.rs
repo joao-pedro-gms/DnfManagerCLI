@@ -33,6 +33,24 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
                 }
                 return Vec::new();
             }
+            // O inspetor fecha como os outros, mas deixa agir sobre o pacote.
+            Modal::Inspector => {
+                match key.code {
+                    KeyCode::Char('m') => {
+                        app.close_modal();
+                        app.toggle_mark_current();
+                    }
+                    KeyCode::Char('t') => {
+                        app.close_modal();
+                        app.assign_input_start();
+                    }
+                    KeyCode::Esc | KeyCode::Enter | KeyCode::Char('q') | KeyCode::Char('?') => {
+                        app.close_modal();
+                    }
+                    _ => {}
+                }
+                return Vec::new();
+            }
             Modal::Preview(_) => {
                 return match key.code {
                     KeyCode::Char('y') | KeyCode::Char('Y') => {
@@ -273,14 +291,12 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
                 Vec::new()
             }
         }
-        KeyCode::Enter => {
+        KeyCode::Enter | KeyCode::Char('i') => {
             if app.tab == Tab::Updates {
                 app.toggle_upgrade_selection();
                 Vec::new()
-            } else if let Some(pkg) = app.current_package().map(|p| p.nevra.clone()) {
-                vec![Cmd::LoadDetails(pkg)]
             } else {
-                Vec::new()
+                app.open_inspector().into_iter().collect()
             }
         }
         KeyCode::Char('!') => {
@@ -298,6 +314,10 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
         KeyCode::Char('r') => match app.tab {
             Tab::History => vec![Cmd::LoadHistory],
             Tab::Orphans => vec![Cmd::LoadOrphans],
+            Tab::Stats => {
+                app.catalog_loaded = false;
+                vec![Cmd::LoadMetadata(app.metadata_fingerprint())]
+            }
             _ => vec![Cmd::LoadAll],
         },
         KeyCode::Char('?') | KeyCode::Char('h') => {

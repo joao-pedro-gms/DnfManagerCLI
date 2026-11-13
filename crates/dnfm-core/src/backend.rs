@@ -59,6 +59,12 @@ pub trait DnfBackend: Send + Sync {
 
     async fn history(&self, limit: i64) -> Result<Vec<HistoryEntry>, BackendError>;
 
+    /// Sinais derivados da lista de arquivos de cada pacote instalado.
+    ///
+    /// É a chamada mais cara do backend (~3,5 s para 8000 pacotes), por isso
+    /// deve ser usada com cache e em segundo plano.
+    async fn file_index(&self) -> Result<crate::metadata::FileIndex, BackendError>;
+
     /// Metadados completos de um pacote (para o painel de detalhes).
     async fn details(&self, nevra: &str) -> Result<PackageDetails, BackendError>;
 

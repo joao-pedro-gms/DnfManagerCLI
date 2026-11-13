@@ -11,6 +11,15 @@ pub fn state_dir() -> PathBuf {
     PathBuf::from(home).join(".local/state/dnfm")
 }
 
+/// `$XDG_CACHE_HOME/dnfm`, com fallback para `~/.cache/dnfm`.
+pub fn cache_dir() -> PathBuf {
+    if let Some(dir) = std::env::var_os("XDG_CACHE_HOME") {
+        return PathBuf::from(dir).join("dnfm");
+    }
+    let home = std::env::var_os("HOME").unwrap_or_default();
+    PathBuf::from(home).join(".cache/dnfm")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

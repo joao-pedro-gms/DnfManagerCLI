@@ -47,6 +47,21 @@ Pacotes instalados como dependência que nenhum outro pacote requer.
 .B repos
 Repositórios configurados e seu estado.
 .TP
+.B stats
+Estatísticas agregadas: totais, tamanho, motivo, repositório, categorias, tipo
+dos pacotes (a partir dos arquivos), maiores pacotes e atualizações por
+severidade. Opções: \fB--json\fR.
+.TP
+.B inspect \fIALVO\fR
+Mostra metadados (licença, fornecedor, URL, descrição), categoria e tags com a
+origem de cada uma, contagem e principais diretórios dos arquivos, marcação e
+atualização disponível. \fIALVO\fR aceita nome, NEVRA ou trecho. Opções:
+\fB--json\fR.
+.TP
+.B tags
+Lista as tags automáticas e quantos pacotes cada uma cobre. Opções:
+\fB-l/--limit\fR, \fB--json\fR.
+.TP
 .B completions
 Gera script de completação para \fBbash\fR, \fBzsh\fR ou \fBfish\fR.
 .SH "CÓDIGO DE SAÍDA"
@@ -66,6 +81,10 @@ Autenticação negada pelo polkit.
 .B 4
 Daemon dnf5 indisponível.
 .SH ARQUIVOS
+.TP
+.I $XDG_CACHE_HOME/dnfm/metadata.json
+Categorias e tags derivadas de AppStream, arquivos e URLs, revalidadas por
+impressão digital dos pacotes instalados (padrão: \fI~/.cache/dnfm/metadata.json\fR).
 .TP
 .I $XDG_STATE_HOME/dnfm/marks.json
 Marcações de remoção (padrão: \fI~/.local/state/dnfm/marks.json\fR). Gravação

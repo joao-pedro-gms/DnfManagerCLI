@@ -1,7 +1,11 @@
 //! Estado da aplicação e transições. Nada aqui desenha nem fala com o D-Bus:
 //! efeitos são devolvidos como [`Cmd`] para o laço de eventos executar.
 
+mod events;
 mod filters;
+mod inspect;
+mod mark_ops;
+mod nav;
 mod sidebar;
 mod state;
 mod types;
@@ -75,6 +79,13 @@ pub struct App {
     /// Área e rolagem do sidebar, preenchidas no desenho para hit-testing.
     pub sidebar_area: Rect,
     pub sidebar_scroll: usize,
+    pub catalog: dnfm_core::TagCatalog,
+    pub catalog_loaded: bool,
+    pub stats: dnfm_core::Stats,
+    pub stats_dirty: bool,
+    pub inspection: Option<Inspection>,
+    /// Comandos extras gerados por um evento (drenados pelo laço).
+    pub extra_cmds: Vec<Cmd>,
     /// Chips de filtro desenhados, com a área para clique.
     pub chips: Vec<(Rect, ChipClear)>,
     /// Áreas das abas, para clique preciso.
@@ -130,6 +141,12 @@ impl Default for App {
             hover: None,
             sidebar_area: Rect::default(),
             sidebar_scroll: 0,
+            catalog: dnfm_core::TagCatalog::default(),
+            catalog_loaded: false,
+            stats: dnfm_core::Stats::default(),
+            stats_dirty: true,
+            inspection: None,
+            extra_cmds: Vec::new(),
             chips: Vec::new(),
             tab_hits: Vec::new(),
         }
@@ -152,49 +169,10 @@ impl App {
             Tab::Orphans => self.orphans.len(),
             Tab::History => self.history.len(),
             Tab::Repos => self.repos.len(),
+            Tab::Stats => 0,
         }
     }
 
-    pub fn selected_index(&self) -> usize {
-        let len = self.rows_len();
-        if len == 0 {
-            return 0;
-        }
-        self.table.selected().unwrap_or(0).min(len - 1)
-    }
-
-    pub fn current_row(&self) -> Option<&RowRef> {
-        if self.tab != Tab::Installed {
-            return None;
-        }
-        self.rows.get(self.selected_index())
-    }
-
-    pub fn current_package(&self) -> Option<&Package> {
-        let idx = self.selected_index();
-        match self.tab {
-            Tab::Installed => match self.rows.get(idx)? {
-                RowRef::Package { index } => self.installed.get(*index),
-                RowRef::Header { .. } => None,
-            },
-            Tab::Orphans => self.orphans.get(idx),
-            _ => None,
-        }
-    }
-
-    pub fn current_upgrade(&self) -> Option<&Upgrade> {
-        self.upgrades.get(self.selected_index())
-    }
-
-    pub fn is_marked(&self, pkg: &Package) -> bool {
-        self.marks.contains(&pkg.name, &pkg.arch)
-    }
-
-    pub fn category_label(&self, pkg: &Package) -> &str {
-        self.taxonomy.category_of(pkg)
-    }
-
-    /// Recalcula filtro, ordenação, grupos e a lista de linhas.
     pub fn refresh(&mut self) {
         self.upgradable_names = self
             .upgrades
@@ -220,6 +198,7 @@ impl App {
             self.custom_categories.prune(&names);
         }
 
+        self.stats_dirty = true;
         self.ensure_package_selection();
         self.rebuild_sidebar();
         self.last_refresh = Some(std::time::Instant::now());
@@ -252,99 +231,14 @@ impl App {
     }
 
     /// Garante que o cursor esteja sobre um pacote (nunca sobre cabeçalho).
-    pub fn ensure_package_selection(&mut self) {
-        if self.tab != Tab::Installed {
-            let len = self.rows_len();
-            if len == 0 {
-                self.table.select(None);
-            } else if self.table.selected().unwrap_or(0) >= len {
-                self.table.select(Some(len - 1));
-            }
-            return;
-        }
-        if self.rows.is_empty() {
-            self.table.select(None);
-            return;
-        }
-        let mut idx = self.table.selected().unwrap_or(0);
-        if idx >= self.rows.len() {
-            idx = self.rows.len() - 1;
-        }
-        if self.rows[idx].is_header() {
-            match self.rows[idx..]
-                .iter()
-                .position(|row| !row.is_header())
-                .map(|offset| idx + offset)
-            {
-                Some(next) => idx = next,
-                None => {
-                    // Grupo recolhido no fim da lista: volta para o primeiro pacote.
-                    if let Some(first) = self.rows.iter().position(|row| !row.is_header()) {
-                        idx = first;
-                    }
-                }
-            }
-        }
-        self.table.select(Some(idx));
-        self.follow_selection();
-    }
-
-    pub fn move_selection(&mut self, delta: isize) {
-        let len = self.rows_len();
-        if len == 0 {
-            self.table.select(None);
-            return;
-        }
-        if self.tab != Tab::Installed {
-            let next = (self.selected_index() as isize + delta).clamp(0, len as isize - 1);
-            self.table.select(Some(next as usize));
-            self.follow_selection();
-            return;
-        }
-
-        let step: isize = if delta >= 0 { 1 } else { -1 };
-        let mut remaining = delta.abs();
-        let mut idx = self.selected_index() as isize;
-        while remaining > 0 {
-            let mut next = idx + step;
-            while next >= 0 && (next as usize) < len && self.rows[next as usize].is_header() {
-                next += step;
-            }
-            if next < 0 || next as usize >= len {
-                break;
-            }
-            idx = next;
-            remaining -= 1;
-        }
-        self.table.select(Some(idx as usize));
-        self.follow_selection();
-    }
-
-    pub fn select(&mut self, index: usize) {
-        if self.rows_len() == 0 {
-            return;
-        }
-        let index = index.min(self.rows_len() - 1);
-        self.table.select(Some(index));
-        self.ensure_package_selection();
-    }
-
-    /// Mantém a linha selecionada dentro da janela visível.
-    pub fn follow_selection(&mut self) {
-        let sel = self.selected_index();
-        if sel < self.scroll {
-            self.scroll = sel;
-        } else if sel >= self.scroll + self.viewport.max(1) {
-            self.scroll = sel + 1 - self.viewport.max(1);
-        }
-    }
-
-    /// Troca a aba e reposiciona o cursor.
     pub fn switch_tab(&mut self, tab: Tab) {
         self.tab = tab;
         self.scroll = 0;
         self.table.select(Some(0));
         self.ensure_package_selection();
+        if tab == Tab::Stats {
+            self.ensure_stats();
+        }
     }
 
     /// `espaço`: em cabeçalho recolhe/expande o grupo; em pacote marca.
@@ -369,76 +263,6 @@ impl App {
         );
     }
 
-    pub fn toggle_mark_current(&mut self) {
-        let Some(pkg) = self.current_package().cloned() else {
-            return;
-        };
-        if let Some(reason) = dnfm_core::safety::protected_reason(&pkg.name, None) {
-            self.status = format!("{} é protegido ({reason})", pkg.name);
-            return;
-        }
-        let marked = self.marks.toggle(&pkg.name, &pkg.arch, &pkg.nevra);
-        self.status = if marked {
-            format!("{} marcado para remoção", pkg.name)
-        } else {
-            format!("{} desmarcado", pkg.name)
-        };
-    }
-
-    /// Marca todos os pacotes do grupo atual (ou todos os visíveis sem grupo).
-    pub fn mark_all_visible(&mut self) {
-        let targets: Vec<usize> = match self.current_row().cloned() {
-            Some(RowRef::Header { label, .. }) if self.group != GroupMode::None => self
-                .visible
-                .iter()
-                .copied()
-                .filter(|idx| {
-                    self.installed
-                        .get(*idx)
-                        .map(|p| self.taxonomy.label_for(p, self.group) == label)
-                        .unwrap_or(false)
-                })
-                .collect(),
-            _ => self.visible.clone(),
-        };
-        let count = targets.len();
-        for idx in targets {
-            if let Some(pkg) = self.installed.get(idx).cloned() {
-                if dnfm_core::safety::is_protected(&pkg.name).is_none()
-                    && !self.marks.contains(&pkg.name, &pkg.arch)
-                {
-                    self.marks.mark(&pkg.name, &pkg.arch, &pkg.nevra, None);
-                }
-            }
-        }
-        self.status = format!("{count} pacotes marcados");
-    }
-
-    pub fn clear_marks(&mut self) {
-        let count = self.marks.len();
-        self.marks.clear();
-        self.status = format!("{count} marcações removidas");
-    }
-
-    pub fn toggle_upgrade_selection(&mut self) {
-        let Some(up) = self.current_upgrade().cloned() else {
-            return;
-        };
-        if !self.selected_upgrades.remove(&up.installed.name) {
-            self.selected_upgrades.insert(up.installed.name.clone());
-        }
-    }
-
-    pub fn select_all_upgrades(&mut self, security_only: bool) {
-        for up in &self.upgrades {
-            if !security_only || up.severity.is_security_relevant() {
-                self.selected_upgrades.insert(up.installed.name.clone());
-            }
-        }
-        self.status = format!("{} atualizações selecionadas", self.selected_upgrades.len());
-    }
-
-    /// Pede a carga da aba atual se ela ainda não foi visitada.
     pub fn lazy_request(&mut self) -> Option<Cmd> {
         match self.tab {
             Tab::Orphans if !self.orphans_loaded && !self.orphans_loading => {
@@ -472,178 +296,6 @@ impl App {
         Some(Cmd::Preview(specs))
     }
 
-    pub fn apply_event(&mut self, event: AppEvent) -> Option<Cmd> {
-        match event {
-            AppEvent::Installed(packages) => {
-                self.installed = packages;
-                self.loading = false;
-                self.taxonomy = Taxonomy::build(&self.installed, &self.custom_categories);
-                self.refresh();
-                self.anim.start_bars();
-                self.status = format!(
-                    "{} instalados · {} categorias · {} marcados",
-                    self.installed.len(),
-                    self.taxonomy.category_count(),
-                    self.marks.len()
-                );
-                let nevra = self
-                    .current_package()
-                    .map(|p| p.nevra.clone())
-                    .unwrap_or_default();
-                if !nevra.is_empty() {
-                    return Some(Cmd::LoadDetails(nevra));
-                }
-                None
-            }
-            AppEvent::Upgrades(list) => {
-                self.upgrades = list;
-                self.upgrades_loaded = true;
-                self.refresh();
-                None
-            }
-            AppEvent::Orphans(list) => {
-                self.orphans = list;
-                self.orphans_loaded = true;
-                self.orphans_loading = false;
-                None
-            }
-            AppEvent::History(list) => {
-                self.history = list;
-                self.history_loaded = true;
-                self.history_loading = false;
-                None
-            }
-            AppEvent::Repos(list) => {
-                self.repos = list;
-                None
-            }
-            AppEvent::Details(details) => {
-                self.details = Some(details);
-                None
-            }
-            AppEvent::Preview(preview) => {
-                self.loading = false;
-                if preview.is_failed() {
-                    self.status = "resolução falhou — veja os problemas".to_string();
-                } else {
-                    self.status = format!(
-                        "{} removidos · {} adicionados · {} liberados",
-                        preview.removals().count(),
-                        preview.additions().count(),
-                        dnfm_core::format_size(preview.freed_bytes())
-                    );
-                }
-                self.open_modal(Modal::Preview(*preview));
-                None
-            }
-            AppEvent::Executed(outcome) => {
-                self.loading = false;
-                if outcome.success {
-                    let applied = self.preview_names();
-                    for (name, arch) in applied {
-                        self.marks.unmark(&name, &arch);
-                    }
-                    let _ = self.marks.save();
-                    self.status = "transação concluída".to_string();
-                    self.close_modal();
-                    return Some(Cmd::LoadAll);
-                }
-                self.status = "a transação falhou".to_string();
-                self.open_modal(Modal::Error("a transação não foi concluída".to_string()));
-                None
-            }
-            AppEvent::Progress(event) => {
-                self.apply_progress(event);
-                None
-            }
-            AppEvent::Failed(message) => {
-                self.loading = false;
-                if matches!(self.modal, Some(Modal::Progress)) {
-                    self.progress.success = Some(false);
-                }
-                self.status = message.clone();
-                self.open_modal(Modal::Error(message));
-                None
-            }
-        }
-    }
-
-    fn preview_names(&self) -> Vec<(String, String)> {
-        match &self.modal {
-            Some(Modal::Preview(preview)) => preview
-                .removals()
-                .map(|i| (i.package.name.clone(), i.package.arch.clone()))
-                .collect(),
-            _ => Vec::new(),
-        }
-    }
-
-    pub fn apply_progress(&mut self, event: ProgressEvent) {
-        match event {
-            ProgressEvent::Begin { total } => {
-                self.progress = Progress {
-                    total,
-                    ..Default::default()
-                };
-                self.open_modal(Modal::Progress);
-            }
-            ProgressEvent::Download {
-                description,
-                downloaded,
-                total,
-            } => {
-                self.progress.total = total;
-                self.progress.done = downloaded;
-                self.progress.current = description;
-            }
-            ProgressEvent::ActionStart { nevra, action, .. } => {
-                self.progress.current = format!("{} {}", action.label(), short_nevra(&nevra));
-                self.progress
-                    .log
-                    .push(format!("{} {}", action.label(), short_nevra(&nevra)));
-                if self.progress.log.len() > 200 {
-                    self.progress.log.remove(0);
-                }
-            }
-            ProgressEvent::ActionProgress {
-                processed, total, ..
-            } => {
-                self.progress.done = processed;
-                self.progress.total = total;
-            }
-            ProgressEvent::ActionStop { .. } => {}
-            ProgressEvent::ScriptError { nevra, code } => {
-                self.progress.log.push(format!(
-                    "scriptlet de {} retornou {code}",
-                    short_nevra(&nevra)
-                ));
-            }
-            ProgressEvent::Done { success } => {
-                self.progress.success = Some(success);
-                self.progress.done = self.progress.total;
-            }
-        }
-    }
-
-    pub fn confirm_preview(&mut self) -> Option<Cmd> {
-        let Some(Modal::Preview(preview)) = &self.modal else {
-            return None;
-        };
-        match preview.clone().confirm() {
-            Ok(token) => {
-                self.open_modal(Modal::Progress);
-                self.progress = Progress::default();
-                self.status = "executando transação…".to_string();
-                Some(Cmd::Execute(token))
-            }
-            Err(err) => {
-                self.open_modal(Modal::Error(err.to_string()));
-                None
-            }
-        }
-    }
-
-    /// Abre um modal com a animação de entrada (sem reiniciar se já aberto).
     pub fn open_modal(&mut self, modal: Modal) {
         let already_open = self.modal.is_some() && !self.anim.closing;
         self.modal = Some(modal);

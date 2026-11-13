@@ -33,7 +33,18 @@ pub async fn list(backend: &Arc<dyn DnfBackend>, opts: ListOptions) -> i32 {
     };
     let marks = MarkSet::load_default();
     let custom = CustomCategories::load_default();
-    let taxonomy = Taxonomy::build(&packages, &custom);
+    // O catálogo automático só é necessário para filtrar por categoria/família
+    // (custa ~1,6 s mesmo com cache), então listas simples seguem rápidas.
+    let precisa_catalogo = !opts.category.is_empty() || !opts.family.is_empty();
+    let catalog = if precisa_catalogo {
+        super::load_catalog(backend, &packages).await.ok()
+    } else {
+        None
+    };
+    let taxonomy = match catalog.as_ref() {
+        Some(catalog) => Taxonomy::build_with(&packages, &custom, Some(catalog)),
+        None => Taxonomy::build(&packages, &custom),
+    };
 
     let mut upgradable = HashSet::new();
     if opts.with_updates {

@@ -110,6 +110,16 @@ impl PickerTarget {
     }
 }
 
+/// Dados abertos no inspetor de pacote.
+#[derive(Debug, Clone)]
+pub struct Inspection {
+    pub package: crate::app::Package,
+    pub categories: Vec<dnfm_core::Tag>,
+    pub tags: Vec<dnfm_core::Tag>,
+    pub files: Option<dnfm_core::PackageFiles>,
+    pub details: Option<dnfm_core::PackageDetails>,
+}
+
 /// Um filtro ativo mostrado como chip no cabeçalho; clicar remove.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ChipClear {

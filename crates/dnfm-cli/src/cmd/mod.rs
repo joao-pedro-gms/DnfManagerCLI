@@ -1,13 +1,17 @@
 //! Subcomandos do CLI. Todos compartilham o mesmo backend da TUI.
 
 mod categories;
+mod inspect;
 mod list;
+mod metadata;
 mod mutate;
 
 pub use categories::{categories, CategoriesOptions, CategoryAction};
+pub use inspect::{inspect, stats, tags, InspectOptions, StatsOptions, TagsOptions};
 pub use list::{
     history, list, orphans, repos, updates, HistoryOptions, ListOptions, UpdatesOptions,
 };
+pub use metadata::load_catalog;
 pub use mutate::{marks, remove, MarksOptions, RemoveOptions};
 
 /// Códigos de saída documentados no `--help`.

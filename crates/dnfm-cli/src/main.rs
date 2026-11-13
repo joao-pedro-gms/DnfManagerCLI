@@ -46,6 +46,32 @@ enum Command {
     /// Abre a interface de terminal
     Tui,
 
+    /// Estatísticas agregadas do sistema instalado
+    Stats {
+        /// Saída em JSON
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Inspeciona metadados, tags e arquivos de um pacote
+    Inspect {
+        /// Nome ou NEVRA (aceita trecho)
+        target: String,
+        /// Saída em JSON
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Lista as tags automáticas e suas contagens
+    Tags {
+        /// Quantas tags mostrar
+        #[arg(short, long, default_value_t = 40)]
+        limit: usize,
+        /// Saída em JSON
+        #[arg(long)]
+        json: bool,
+    },
+
     /// Lista pacotes instalados
     List {
         /// Padrões de busca (nome ou trecho)
@@ -255,6 +281,27 @@ async fn run() -> i32 {
                 },
             )
             .await
+        }
+        Some(Command::Stats { json }) => {
+            let backend = match connect(cli.fake).await {
+                Ok(backend) => backend,
+                Err(err) => return cmd::report_err(&err),
+            };
+            cmd::stats(&backend, cmd::StatsOptions { json }).await
+        }
+        Some(Command::Inspect { target, json }) => {
+            let backend = match connect(cli.fake).await {
+                Ok(backend) => backend,
+                Err(err) => return cmd::report_err(&err),
+            };
+            cmd::inspect(&backend, cmd::InspectOptions { target, json }).await
+        }
+        Some(Command::Tags { limit, json }) => {
+            let backend = match connect(cli.fake).await {
+                Ok(backend) => backend,
+                Err(err) => return cmd::report_err(&err),
+            };
+            cmd::tags(&backend, cmd::TagsOptions { limit, json }).await
         }
         Some(Command::Categories { action, json }) => {
             let backend = match connect(cli.fake).await {

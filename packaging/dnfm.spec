@@ -1,5 +1,5 @@
 Name:           dnfm
-Version:        0.2.0
+Version:        0.3.0
 Release:        1%{?dist}
 Summary:        Gerenciador de pacotes DNF5 com TUI e CLI
 

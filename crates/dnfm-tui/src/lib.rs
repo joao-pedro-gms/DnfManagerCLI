@@ -83,6 +83,9 @@ pub async fn run(backend: Arc<dyn DnfBackend>) -> anyhow::Result<App> {
                 if let Some(cmd) = app.apply_event(event) {
                     spawn_cmd(&tx, &backend, cmd);
                 }
+                for cmd in app.extra_cmds.drain(..) {
+                    spawn_cmd(&tx, &backend, cmd);
+                }
                 lazy_load(&mut app, &tx, &backend);
             }
             _ = tokio::time::sleep(app.anim.frame_time()) => {
@@ -152,6 +155,28 @@ fn spawn_cmd(tx: &mpsc::UnboundedSender<AppEvent>, backend: &Arc<dyn DnfBackend>
                 }
                 if let Ok(repos) = backend.repos().await {
                     let _ = tx.send(AppEvent::Repos(repos));
+                }
+            });
+        }
+        Cmd::LoadMetadata(fingerprint) => {
+            tokio::spawn(async move {
+                let cache = dnfm_core::MetadataCache::default();
+                if let Some(catalog) = cache.load(fingerprint) {
+                    tracing::debug!("metadados do cache");
+                    let _ = tx.send(AppEvent::Metadata(Box::new(catalog)));
+                    return;
+                }
+                match backend.file_index().await {
+                    Ok(index) => {
+                        let catalog = dnfm_core::TagCatalog::build_system(index);
+                        if let Err(err) = cache.save(&catalog, fingerprint) {
+                            tracing::warn!(%err, "não consegui gravar o cache de metadados");
+                        }
+                        let _ = tx.send(AppEvent::Metadata(Box::new(catalog)));
+                    }
+                    Err(err) => {
+                        let _ = tx.send(AppEvent::Failed(err.short()));
+                    }
                 }
             });
         }

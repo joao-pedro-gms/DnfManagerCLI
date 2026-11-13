@@ -14,8 +14,10 @@ dbus = ["dep:zbus", "dep:futures-util"]
 
 [dependencies]
 anyhow = "1"
+flate2 = "1"
 async-trait.workspace = true
 futures-util = { workspace = true, optional = true }
+quick-xml = { version = "0.37", features = ["serialize"] }
 regex = "1"
 serde.workspace = true
 serde_json.workspace = true

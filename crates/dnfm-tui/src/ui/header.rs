@@ -59,19 +59,24 @@ pub(crate) fn draw(frame: &mut Frame, app: &mut App, area: Rect) {
     // Linha 2: abas + chips de filtro.
     let linha_y = inner.y + 1;
     if inner.height >= 2 {
-        draw_tabs(frame, app, inner.x, linha_y);
+        draw_tabs(frame, app, inner.x, linha_y, inner.width);
         draw_chips(frame, app, inner);
     }
 }
 
-fn draw_tabs(frame: &mut Frame, app: &mut App, x0: u16, y: u16) {
+fn draw_tabs(frame: &mut Frame, app: &mut App, x0: u16, y: u16, largura: u16) {
     let theme = app.theme.clone();
     let mut spans: Vec<Span> = Vec::new();
     let mut hits: Vec<(Rect, Tab)> = Vec::new();
     let mut x = x0 + 1;
+    let limite = x0.saturating_add(largura);
     for tab in Tab::ALL.iter() {
         let ativo = *tab == app.tab;
         let label = format!(" {} ", tab.title());
+        // Terminal estreito: mostra só as abas que cabem inteiras.
+        if x + label.chars().count() as u16 > limite {
+            break;
+        }
         let style = if ativo {
             Style::default()
                 .fg(ratatui::style::Color::Black)

@@ -181,6 +181,30 @@ impl DnfBackend for FakeBackend {
         Ok(self.history_list.clone())
     }
 
+    async fn file_index(&self) -> Result<crate::metadata::FileIndex, BackendError> {
+        let mut out = crate::metadata::FileIndex::default();
+        for (idx, pkg) in self.installed_packages.iter().enumerate() {
+            let caminhos: Vec<String> = match idx % 3 {
+                0 => vec![
+                    format!("/usr/bin/{}", pkg.name),
+                    format!("/usr/share/man/man1/{}.1.gz", pkg.name),
+                ],
+                1 => vec![format!("/usr/lib64/lib{}.so.1", pkg.name)],
+                _ => vec![
+                    format!("/usr/share/applications/{}.desktop", pkg.name),
+                    format!("/usr/bin/{}", pkg.name),
+                ],
+            };
+            out.files.insert(
+                pkg.name.clone(),
+                crate::metadata::signals_from_paths(caminhos),
+            );
+        }
+        out.families
+            .insert("vlc".to_string(), "Multimídia".to_string());
+        Ok(out)
+    }
+
     async fn details(&self, nevra: &str) -> Result<PackageDetails, BackendError> {
         Ok(PackageDetails {
             nevra: nevra.to_string(),

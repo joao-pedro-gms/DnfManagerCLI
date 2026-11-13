@@ -14,8 +14,11 @@ use crate::app::{App, ChipClear, Modal, RowRef, Tab};
 use crate::theme::Theme;
 
 mod header;
+mod inspector;
 mod modals;
+mod panels;
 mod sidebar;
+mod stats_view;
 
 pub fn draw(frame: &mut Frame, app: &mut App) {
     let area = frame.area();
@@ -38,7 +41,11 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         draw_table(frame, app, resto);
     } else {
         app.sidebar_area = Rect::default();
-        draw_table(frame, app, corpo);
+        if app.tab == Tab::Stats {
+            stats_view::draw(frame, app, corpo);
+        } else {
+            draw_table(frame, app, corpo);
+        }
     }
 
     draw_details(frame, app, detalhes);
@@ -46,12 +53,12 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
 
     // Sobreposições: campo de categoria, seletor/painel de filtros, modal.
     if app.assign_input.is_some() {
-        modals::draw_assign(frame, app, area);
+        panels::draw_assign(frame, app, area);
     }
     if let Some(picker) = app.picker.clone() {
-        modals::draw_picker(frame, app, area, &picker);
+        panels::draw_picker(frame, app, area, &picker);
     } else if app.filter_panel.is_some() {
-        modals::draw_filter_panel(frame, app, area);
+        panels::draw_filter_panel(frame, app, area);
     }
     if let Some(modal) = app.modal.clone() {
         let rect = modals::modal_rect(frame.area(), modal_geometry(&modal), app.anim.modal_eased());
@@ -62,6 +69,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
                 modals::draw_preview(frame, app, rect, &preview, &app.pending_specs)
             }
             Modal::Progress => modals::draw_progress(frame, app, rect),
+            Modal::Inspector => inspector::draw(frame, app, rect),
         }
     }
 }
@@ -73,6 +81,7 @@ fn modal_geometry(modal: &Modal) -> (u16, u16) {
         Modal::Error(_) => (60, 10),
         Modal::Preview(_) => (76, 30),
         Modal::Progress => (62, 12),
+        Modal::Inspector => (92, 36),
     }
 }
 
@@ -183,6 +192,7 @@ fn table_layout(tab: Tab) -> (Vec<&'static str>, Vec<Constraint>) {
                 Constraint::Min(20),
             ],
         ),
+        Tab::Stats => (vec![" ", "métrica", "valor"], vec![Constraint::Min(20)]),
         Tab::Repos => (
             vec!["id", "nome", "estado"],
             vec![
@@ -206,6 +216,7 @@ fn build_row(app: &App, idx: usize, theme: &Theme) -> Row<'static> {
     };
 
     match app.tab {
+        Tab::Stats => Row::new(vec![Cell::from("")]),
         Tab::Installed => match app.rows.get(idx) {
             Some(RowRef::Header {
                 label,
@@ -595,6 +606,10 @@ fn keybar<'a>(app: &App, theme: &Theme) -> Line<'a> {
         }
         Tab::Repos => {
             push("r", "recarregar");
+            push("tab", "abas");
+        }
+        Tab::Stats => {
+            push("r", "recalcular");
             push("tab", "abas");
         }
     }

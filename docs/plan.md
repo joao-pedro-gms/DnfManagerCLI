@@ -464,3 +464,63 @@ agrupamentos e filtros.
   imediato no primeiro quadro.
 - O hover depende de o terminal reportar movimento do mouse.
 - O resumo do sidebar conta sobre todos os instalados, não sobre o filtro atual.
+
+## 14. Extensão entregue: metadados, tags e inspeção
+
+### Objetivo
+
+Categorizar sem pedir nada ao usuário e deixar inspecionar o que foi deduzido.
+Medição prévia (probes `probe_meta2.py` e `probe_union.py`) mostrou que nenhuma
+fonte cobre tudo: AppStream cobre 2,2% (os apps de GUI), `Group` do RPM é
+"Unspecified" em 99,8%, comps tem 7 grupos. A saída foi compor quatro fontes.
+
+### Fontes e confiança
+
+| fonte | rótulo | confiança | custo |
+|---|---|---|---|
+| categoria própria | `própria` | 100 | zero |
+| AppStream (`swcatalog/xml`) | `appstream` | 90 | 8,4 MB gz, ~0,3 s |
+| `.desktop` | `desktop` | 75 | trivial (ids vêm da lista de arquivos) |
+| regra curada por prefixo | `curada` | 60 | zero |
+| domínio da URL | `url` | 50 | zero (mesma chamada da lista de arquivos) |
+| sinal de arquivo (tipo) | `arquivos` | 40 | ~3,5 s para 8.009 pacotes |
+
+### Custo e cache
+
+`Rpm.list` com `package_attrs=["name","files","url"]` devolve 825 mil caminhos
+em ~3,4 s. O resultado é reduzido, no backend, a `PackageFiles` (contagem,
+diretórios de topo, `FileSignals` em bitflags, ids de `.desktop`/`metainfo`) —
+nunca guardamos os caminhos. Juntamente com o parsing do catálogo AppStream, vai
+para `~/.cache/dnfm/metadata.json` (1,9 MB) e é revalidado por FNV-1a sobre os
+NEVRA instalados + mtime do catálogo. Primeira execução: 8,2 s; com cache: 3,5 s
+(dominado pelas outras chamadas do daemon).
+
+### Integração
+
+- `Taxonomy::build_with(pacotes, custom, Some(catalog))` — precedência:
+  própria > AppStream > curada > Outros. Família: URL > prefixo.
+- TUI: aba **Estatísticas** (`Stats::build`, tudo em memória), inspetor por
+  `enter`/`i` (metadados, categorias/tags com origem, arquivos, estado),
+  `r` na aba Estatísticas força recálculo dos metadados.
+- CLI: `stats`, `inspect <alvo>`, `tags`, todos com `--json` no envelope
+  `schema_version: 1`.
+- `list --category/--family` carrega o catálogo sob demanda (só quando filtra).
+
+### Verificação real (8.009 pacotes)
+
+- cobertura: 177 com AppStream (2,2%), 8.009 com lista de arquivos (100%);
+- categorias: TeX Live 4.787 (59,8%), Outros 1.137 (14,2%), Bibliotecas 744;
+- tipos: biblioteca 2.595, documentação 1.736, man 1.129, comando 1.070;
+- `inspect vlc` → `Multimídia (appstream)`, 26 arquivos, licença e descrição;
+- `list --category Multimídia` inclui os plugins do VLC pela família da URL.
+
+### Limitações
+
+- AppStream só descreve apps de GUI; o resto não tem categoria funcional em
+  metadado nenhum — daí o eixo de *tipo* em vez de categoria.
+- `/usr/share/licenses` foi descartado do sinal `documentação` (dava 87% da
+  base no TeX Live).
+- Componentes AppStream sem `<pkgname>` usam `<provides><binary>` como
+  aproximação; pode mapear um binário que não seja o nome do RPM.
+- O cache não acompanha mudanças em `/usr/share/applications` sem mudança de
+  pacote (raro, mas possível).

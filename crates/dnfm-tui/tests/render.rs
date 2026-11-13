@@ -322,3 +322,79 @@ fn animacao_de_entrada_reduz_o_modal_no_primeiro_quadro() {
     let inicial = render(&mut app, 120, 40);
     assert!(inicial.contains("ajuda"));
 }
+
+#[test]
+fn aba_de_estatisticas_mostra_paineis() {
+    use dnfm_tui::app::Tab;
+
+    let mut app = populated();
+    app.loading = false;
+    app.tab = Tab::Stats;
+    let screen = render(&mut app, 150, 44);
+
+    assert!(screen.contains("RESUMO"));
+    assert!(screen.contains("CATEGORIAS"));
+    assert!(screen.contains("MAIORES PACOTES"));
+    assert!(screen.contains("ATUALIZAÇÕES"));
+    assert!(screen.contains("pacotes instalados"));
+}
+
+#[test]
+fn inspetor_mostra_metadados_tags_e_arquivos() {
+    let mut app = populated();
+    app.loading = false;
+    let pacote = app.installed[0].clone();
+    app.inspection = Some(dnfm_tui::app::Inspection {
+        categories: vec![dnfm_core::Tag::new(
+            "Sistema",
+            dnfm_core::TagSource::AppStream,
+        )],
+        tags: vec![
+            dnfm_core::Tag::new("Sistema", dnfm_core::TagSource::AppStream),
+            dnfm_core::Tag::new("biblioteca", dnfm_core::TagSource::FileSignal),
+        ],
+        files: Some(dnfm_core::PackageFiles {
+            count: 42,
+            dirs: vec![("/usr/lib64".into(), 40), ("/usr/bin".into(), 2)],
+            ..Default::default()
+        }),
+        details: Some(dnfm_core::PackageDetails {
+            nevra: pacote.nevra.clone(),
+            url: "https://example.org".into(),
+            license: "MIT".into(),
+            description: "descrição de teste".into(),
+            vendor: "Fedora Project".into(),
+            group: "Unspecified".into(),
+        }),
+        package: pacote,
+    });
+    app.open_modal(Modal::Inspector);
+    app.anim.advance(1.0);
+    let screen = render(&mut app, 150, 44);
+
+    assert!(screen.contains("INSPETOR"));
+    assert!(screen.contains("METADADOS"));
+    assert!(screen.contains("CATEGORIAS E TAGS"));
+    assert!(screen.contains("ARQUIVOS"));
+    assert!(screen.contains("MIT"));
+    assert!(screen.contains("/usr/lib64"));
+    assert!(screen.contains("42"));
+}
+
+#[test]
+fn tecla_i_abre_o_inspetor() {
+    use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+    let mut app = populated();
+    app.loading = false;
+    let cmds = dnfm_tui::keys::handle_key(
+        &mut app,
+        KeyEvent::new(KeyCode::Char('i'), KeyModifiers::NONE),
+    );
+    assert!(matches!(app.modal, Some(Modal::Inspector)));
+    assert!(app.inspection.is_some());
+    // Pede os detalhes que ainda faltam.
+    assert!(cmds
+        .iter()
+        .any(|c| matches!(c, dnfm_tui::app::Cmd::LoadDetails(_))));
+}

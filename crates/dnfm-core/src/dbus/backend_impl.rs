@@ -90,6 +90,33 @@ impl DnfBackend for DbusBackend {
         Ok(raw.iter().map(HistoryEntry::from_attrs).collect())
     }
 
+    async fn file_index(&self) -> Result<crate::metadata::FileIndex, BackendError> {
+        let raw = self
+            .rpm
+            .list(opts(vec![
+                ("scope", text("installed")),
+                ("package_attrs", strings(&["name", "files", "url"])),
+            ]))
+            .await
+            .map_err(|e| BackendError::Daemon(e.to_string()))?;
+
+        let mut index = crate::metadata::FileIndex::default();
+        for attrs in &raw {
+            let name = attrs.str_or("name", "");
+            if name.is_empty() {
+                continue;
+            }
+            let caminhos = attrs.get_str_list("files").unwrap_or_default();
+            index
+                .files
+                .insert(name.clone(), crate::metadata::signals_from_paths(caminhos));
+            if let Some(familia) = crate::metadata::family_from_url(&attrs.str_or("url", "")) {
+                index.families.insert(name, familia.to_string());
+            }
+        }
+        Ok(index)
+    }
+
     async fn details(&self, nevra: &str) -> Result<PackageDetails, BackendError> {
         let raw = self
             .rpm

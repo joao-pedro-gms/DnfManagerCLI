@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+use crate::metadata::TagCatalog;
 use crate::model::Package;
 
 /// Modo de agrupamento da listagem.
@@ -420,6 +421,16 @@ pub struct Taxonomy {
 
 impl Taxonomy {
     pub fn build(packages: &[Package], custom: &CustomCategories) -> Self {
+        Self::build_with(packages, custom, None)
+    }
+
+    /// Como [`Self::build`], mas usando o catálogo automático (AppStream,
+    /// .desktop e domínio da URL) antes de cair nas regras curadas.
+    pub fn build_with(
+        packages: &[Package],
+        custom: &CustomCategories,
+        catalog: Option<&TagCatalog>,
+    ) -> Self {
         let mut counts: BTreeMap<String, usize> = BTreeMap::new();
         let mut custom_labels: BTreeMap<String, usize> = BTreeMap::new();
         let mut category_of = HashMap::with_capacity(packages.len());
@@ -443,7 +454,10 @@ impl Taxonomy {
                         .or_insert(1);
                     label.to_string()
                 }
-                None => categorize(pkg),
+                None => catalog
+                    .and_then(|c| c.category_for(pkg))
+                    .map(|tag| tag.label)
+                    .unwrap_or_else(|| categorize(pkg)),
             };
             counts
                 .entry(label.clone())
@@ -452,17 +466,21 @@ impl Taxonomy {
             category_of.insert(key.clone(), label);
 
             let name = pkg.name.to_ascii_lowercase();
-            let fam = match alias_for(prefix(&name)) {
-                // Apelido é curado: vale mesmo com um único pacote.
+            // 1) domínio da URL, quando identifica o projeto; 2) apelido do
+            // prefixo; 3) prefixo com limiar de tamanho.
+            let fam = match catalog.and_then(|c| c.family_for(&pkg.name)) {
                 Some(label) => label.to_string(),
-                None => {
-                    let raw = family(pkg);
-                    if family_counts.get(&raw).copied().unwrap_or(0) < MIN_FAMILY_SIZE {
-                        OTHER_FAMILY.to_string()
-                    } else {
-                        raw
+                None => match alias_for(prefix(&name)) {
+                    Some(label) => label.to_string(),
+                    None => {
+                        let raw = family(pkg);
+                        if family_counts.get(&raw).copied().unwrap_or(0) < MIN_FAMILY_SIZE {
+                            OTHER_FAMILY.to_string()
+                        } else {
+                            raw
+                        }
                     }
-                }
+                },
             };
             family_of.insert(key, fam);
         }
@@ -686,5 +704,35 @@ mod tests {
         assert_eq!(custom.prune(&["vlc"]), 1);
         assert!(custom.get("vlc", "x86_64").is_some());
         assert!(custom.get("firefox", "x86_64").is_none());
+    }
+    #[test]
+    fn appstream_tem_prioridade_sobre_a_regra_curada() {
+        let pacotes = vec![pkg("texlive-foo")];
+        let mut catalog = crate::metadata::TagCatalog::default();
+        catalog.appstream.insert(
+            "texlive-foo".into(),
+            crate::metadata::AppStreamComponent {
+                id: "org.exemplo.Foo.desktop".into(),
+                categories: vec!["Graphics".into()],
+                summary: None,
+            },
+        );
+        let sem_catalogo = Taxonomy::build(&pacotes, &CustomCategories::empty());
+        assert_eq!(sem_catalogo.category_of(&pacotes[0]), "TeX Live");
+
+        let com_catalogo =
+            Taxonomy::build_with(&pacotes, &CustomCategories::empty(), Some(&catalog));
+        assert_eq!(com_catalogo.category_of(&pacotes[0]), "Gráficos");
+    }
+
+    #[test]
+    fn familia_vem_do_dominio_da_url() {
+        let pacotes = vec![pkg("pacote-sem-prefixo-conhecido")];
+        let mut catalog = crate::metadata::TagCatalog::default();
+        catalog
+            .families
+            .insert("pacote-sem-prefixo-conhecido".into(), "Zig".into());
+        let tax = Taxonomy::build_with(&pacotes, &CustomCategories::empty(), Some(&catalog));
+        assert_eq!(tax.family_of(&pacotes[0]), "Zig");
     }
 }
