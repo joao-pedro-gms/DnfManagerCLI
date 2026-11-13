@@ -1,8 +1,9 @@
 //! Tradução de teclado e mouse em comandos. Sem I/O, testável isoladamente.
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+use dnfm_core::categories::GroupMode;
 
-use crate::app::{App, Cmd, Modal, Tab};
+use crate::app::{App, Cmd, Modal, RowRef, Tab};
 
 fn is_ctrl_c(key: &KeyEvent) -> bool {
     key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c')
@@ -39,13 +40,55 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
                 };
             }
             Modal::Progress => {
-                // Durante a transação só é possível sair da tela de progresso.
                 if key.code == KeyCode::Esc {
                     app.status = "transação em andamento…".to_string();
                 }
                 return Vec::new();
             }
         }
+    }
+
+    // Campo de atribuição de categoria.
+    if app.assign_input.is_some() {
+        match key.code {
+            KeyCode::Esc => app.assign_input = None,
+            KeyCode::Enter => app.assign_input_commit(),
+            KeyCode::Backspace => app.assign_input_pop(),
+            KeyCode::Char(ch) => app.assign_input_push(ch),
+            _ => {}
+        }
+        return Vec::new();
+    }
+
+    // Seletor de categoria/família.
+    if app.picker.is_some() {
+        match key.code {
+            KeyCode::Esc => app.picker = None,
+            KeyCode::Enter => app.picker_apply(),
+            KeyCode::Up => app.picker_move(-1),
+            KeyCode::Down => app.picker_move(1),
+            KeyCode::PageUp => app.picker_move(-8),
+            KeyCode::PageDown => app.picker_move(8),
+            KeyCode::Char(' ') => app.picker_toggle(),
+            KeyCode::Backspace => app.picker_backspace(),
+            KeyCode::Char(ch) => app.picker_input(ch),
+            _ => {}
+        }
+        return Vec::new();
+    }
+
+    // Painel de filtros.
+    if app.filter_panel.is_some() {
+        match key.code {
+            KeyCode::Esc | KeyCode::Char('f') => app.close_filter_panel(),
+            KeyCode::Up | KeyCode::Char('k') => app.filter_panel_move(-1),
+            KeyCode::Down | KeyCode::Char('j') => app.filter_panel_move(1),
+            KeyCode::Char(' ') | KeyCode::Enter | KeyCode::Right => {
+                return app.activate_facet().into_iter().collect();
+            }
+            _ => {}
+        }
+        return Vec::new();
     }
 
     // Modo de busca.
@@ -67,8 +110,8 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
                 app.filter.text = buffer.clone();
                 app.refresh();
             }
-            KeyCode::Char(c) => {
-                buffer.push(c);
+            KeyCode::Char(ch) => {
+                buffer.push(ch);
                 app.filter.text = buffer.clone();
                 app.refresh();
             }
@@ -84,19 +127,18 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
         }
         KeyCode::Esc => {
             app.filter.clear();
+            app.collapsed.clear();
             app.refresh();
             Vec::new()
         }
         KeyCode::Tab => {
-            app.tab = app.tab.step(1);
-            app.scroll = 0;
-            app.table.select(Some(0));
+            let next = app.tab.step(1);
+            app.switch_tab(next);
             Vec::new()
         }
         KeyCode::BackTab => {
-            app.tab = app.tab.step(-1);
-            app.scroll = 0;
-            app.table.select(Some(0));
+            let prev = app.tab.step(-1);
+            app.switch_tab(prev);
             Vec::new()
         }
         KeyCode::Down | KeyCode::Char('j') => {
@@ -119,6 +161,14 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
             app.select(0);
             Vec::new()
         }
+        KeyCode::Char('o') => {
+            cycle_group(app, false);
+            Vec::new()
+        }
+        KeyCode::Char('O') => {
+            cycle_group(app, true);
+            Vec::new()
+        }
         KeyCode::End | KeyCode::Char('G') => {
             let last = app.rows_len().saturating_sub(1);
             app.select(last);
@@ -126,7 +176,7 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
         }
         KeyCode::Char(' ') => {
             if app.tab.marks_packages() {
-                app.toggle_mark_current();
+                app.toggle_current();
             }
             Vec::new()
         }
@@ -142,6 +192,26 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
         }
         KeyCode::Char('/') => {
             app.search = Some(app.filter.text.clone());
+            Vec::new()
+        }
+        KeyCode::Char('f') => {
+            app.open_filter_panel();
+            Vec::new()
+        }
+        KeyCode::Char('c') => {
+            app.open_picker(crate::app::PickerTarget::Category);
+            Vec::new()
+        }
+        KeyCode::Char('C') => {
+            app.open_picker(crate::app::PickerTarget::Family);
+            Vec::new()
+        }
+        KeyCode::Char('t') => {
+            app.assign_input_start();
+            Vec::new()
+        }
+        KeyCode::Char('T') => {
+            app.unassign_current();
             Vec::new()
         }
         KeyCode::Char('s') => {
@@ -200,11 +270,9 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
             Vec::new()
         }
         KeyCode::Char('r') => match app.tab {
-            Tab::Installed => vec![Cmd::LoadAll],
-            Tab::Updates => vec![Cmd::LoadAll],
-            Tab::Orphans => vec![Cmd::LoadOrphans],
             Tab::History => vec![Cmd::LoadHistory],
-            Tab::Repos => vec![Cmd::LoadAll],
+            Tab::Orphans => vec![Cmd::LoadOrphans],
+            _ => vec![Cmd::LoadAll],
         },
         KeyCode::Char('?') | KeyCode::Char('h') => {
             app.modal = Some(Modal::Help);
@@ -214,7 +282,7 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
     }
 }
 
-/// Mouse -> comandos. Clique na coluna da caixa marca; clique no cabeçalho ordena.
+/// Mouse -> comandos. Clique na coluna da caixa marca; cabeçalho recolhe grupo.
 pub fn handle_mouse(app: &mut App, mouse: MouseEvent) -> Vec<Cmd> {
     let area = app.table_area;
     let inside = mouse.column >= area.x
@@ -233,19 +301,15 @@ pub fn handle_mouse(app: &mut App, mouse: MouseEvent) -> Vec<Cmd> {
             // Aba: primeira linha do cabeçalho.
             if mouse.row <= 2 {
                 let offset = (mouse.column as usize).saturating_sub(area.x as usize + 2);
-                let tab_width = 18;
-                let idx = offset / tab_width;
+                let idx = offset / 18;
                 if let Some(tab) = Tab::ALL.get(idx) {
-                    app.tab = *tab;
-                    app.scroll = 0;
-                    app.table.select(Some(0));
+                    app.switch_tab(*tab);
                 }
                 return Vec::new();
             }
             if !inside {
                 return Vec::new();
             }
-            // Cabeçalho da tabela: ordena pela coluna clicada.
             let header_y = area.y + 1;
             if mouse.row == header_y {
                 app.sort = match (mouse.column - area.x) / 18 {
@@ -258,12 +322,19 @@ pub fn handle_mouse(app: &mut App, mouse: MouseEvent) -> Vec<Cmd> {
                 return Vec::new();
             }
             let row = (mouse.row - header_y - 1) as usize + app.scroll;
-            if row < app.rows_len() {
-                app.select(row);
-                // Clique na coluna da caixa (ou nas duas primeiras células).
-                if app.tab.marks_packages() && mouse.column < area.x + 4 {
-                    app.toggle_mark_current();
+            if row >= app.rows_len() {
+                return Vec::new();
+            }
+            if app.tab == Tab::Installed {
+                if let Some(RowRef::Header { label, .. }) = app.rows.get(row).cloned() {
+                    app.toggle_group(&label);
+                    return Vec::new();
                 }
+            }
+            app.select(row);
+            // Clique na coluna da caixa alterna a marcação.
+            if app.tab.marks_packages() && mouse.column < area.x + 4 {
+                app.toggle_mark_current();
             }
         }
         _ => {}
@@ -271,86 +342,17 @@ pub fn handle_mouse(app: &mut App, mouse: MouseEvent) -> Vec<Cmd> {
     Vec::new()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use dnfm_core::{Package, Reason};
-
-    fn key(code: KeyCode) -> KeyEvent {
-        KeyEvent::new(code, KeyModifiers::NONE)
+/// Cicla o agrupamento (`g` com shift alterna para trás).
+pub fn cycle_group(app: &mut App, backwards: bool) {
+    if backwards {
+        for _ in 0..(GroupMode::ALL.len() - 1) {
+            app.group = app.group.next();
+        }
+    } else {
+        app.group = app.group.next();
     }
-
-    fn app() -> App {
-        let mut app = App {
-            installed: vec![Package {
-                name: "vlc".into(),
-                evr: "3.0.24-3.fc45".into(),
-                arch: "x86_64".into(),
-                repo_id: "@System".into(),
-                from_repo_id: None,
-                size: 1024,
-                install_time: 0,
-                summary: String::new(),
-                reason: Reason::User,
-                nevra: "vlc-3.0.24-3.fc45.x86_64".into(),
-                is_installed: true,
-            }],
-            ..Default::default()
-        };
-        app.refresh();
-        app
-    }
-
-    #[test]
-    fn espaco_marca_pacote_sob_o_cursor() {
-        let mut app = app();
-        handle_key(&mut app, key(KeyCode::Char(' ')));
-        assert_eq!(app.marks.len(), 1);
-    }
-
-    #[test]
-    fn barra_abre_busca_e_filtra_ao_digitar() {
-        let mut app = app();
-        handle_key(&mut app, key(KeyCode::Char('/')));
-        assert!(app.search.is_some());
-        handle_key(&mut app, key(KeyCode::Char('v')));
-        assert_eq!(app.visible.len(), 1);
-        handle_key(&mut app, key(KeyCode::Esc));
-        assert!(app.search.is_none());
-        assert!(app.filter.text.is_empty());
-    }
-
-    #[test]
-    fn q_sai_mas_esc_so_limpa_filtro() {
-        let mut app = app();
-        assert!(handle_key(&mut app, key(KeyCode::Esc)).is_empty());
-        assert!(!app.quit);
-        let cmds = handle_key(&mut app, key(KeyCode::Char('q')));
-        assert!(matches!(cmds.as_slice(), [Cmd::Quit]));
-        assert!(app.quit);
-    }
-
-    #[test]
-    fn p_gera_preview_com_a_marcacao() {
-        let mut app = app();
-        handle_key(&mut app, key(KeyCode::Char(' ')));
-        let cmds = handle_key(&mut app, key(KeyCode::Char('p')));
-        assert!(matches!(cmds.as_slice(), [Cmd::Preview(_)]));
-    }
-
-    #[test]
-    fn tab_troca_de_aba() {
-        let mut app = app();
-        handle_key(&mut app, key(KeyCode::Tab));
-        assert_eq!(app.tab, Tab::Updates);
-    }
-
-    #[test]
-    fn ajuda_abre_e_fecha() {
-        let mut app = app();
-        handle_key(&mut app, key(KeyCode::Char('?')));
-        assert!(matches!(app.modal, Some(Modal::Help)));
-        handle_key(&mut app, key(KeyCode::Esc));
-        assert!(app.modal.is_none());
-    }
+    app.collapsed.clear();
+    app.rebuild_rows();
+    app.ensure_package_selection();
+    app.status = format!("agrupado por {}", app.group.label());
 }

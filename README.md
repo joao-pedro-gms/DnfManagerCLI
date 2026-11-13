@@ -48,6 +48,12 @@ dnfm remove --from-marks --dry-run      # ver o efeito, sem aplicar
 dnfm remove --from-marks --yes          # aplicar (polkit pede a senha)
 dnfm orphans                            # dependências que ninguém mais requer
 dnfm history --limit 10                 # histórico de transações
+
+dnfm categories                         # categorias com contagem
+dnfm categories assign Multimídia vlc firefox
+dnfm list --category "TeX Live" --sort size
+dnfm list --group-by category --with-updates
+dnfm list --arch noarch --min-size 10M --group-by family
 ```
 
 ### Teclas
@@ -61,6 +67,10 @@ dnfm history --limit 10                 # histórico de transações
 | `enter` | detalhes (ou seleciona atualização) |
 | `!` / `A` | seleciona atualizações de segurança / todas |
 | `/` | busca fuzzy por nome e resumo |
+| `o` / `O` | cicla o agrupamento (categoria, família, repo, motivo) |
+| `f` | painel de filtros (texto, categoria, repo, motivo, arch, tamanho, data) |
+| `c` / `C` | filtra por categoria / família (seletor com busca) |
+| `t` / `T` | dá ou remove uma categoria própria |
 | `s` / `S` | cicla ordenação / inverte |
 | `tab` | próxima aba |
 | `r` | recarrega |
@@ -68,6 +78,44 @@ dnfm history --limit 10                 # histórico de transações
 
 Mouse: clique seleciona, clique na caixa marca, roda rola, clique no cabeçalho
 ordena, clique na aba troca de aba.
+
+
+## Categorias, agrupamento e filtros
+
+O tag `Group` do RPM está morto no Fedora (quase tudo vem como "Unspecified") e
+o comps cobre uma fração mínima da base instalada, então a taxonomia é montada
+em três camadas, da mais forte para a mais fraca:
+
+1. **categoria própria** — o que você atribuiu com `t` ou `dnfm categories
+   assign`. Vence sempre e fica em `~/.local/state/dnfm/categories.json`.
+2. **categoria curada** — regras por prefixo e palavra-chave: `texlive*` →
+   TeX Live, `kf5/kf6/plasma*` → KDE Plasma, `*-firmware` → Firmware,
+   `*-devel` → Desenvolvimento, `lib*`/`*-libs` → Bibliotecas, e assim por
+   diante (30 categorias na instalação padrão).
+3. **família** — prefixo do nome com apelidos que juntam parentes; famílias com
+   menos de 3 pacotes caem em "Outros".
+
+Agrupamento (`o` na TUI, `--group-by` no CLI) funciona por categoria, família,
+repo ou motivo. Cabeçalhos de grupo aparecem como linhas próprias: `espaço`
+recolhe/expande e `a` marca o grupo inteiro.
+
+Filtros combinam livremente (`f` abre o painel; todos são E lógico, exceto
+categorias/famílias, que são OU dentro da mesma dimensão):
+
+| filtro | TUI | CLI |
+|---|---|---|
+| texto (fuzzy) | `/` | `--pattern` |
+| categoria / família | `c` / `C` | `--category` / `--family` |
+| repo | painel `f` | `--repo` |
+| motivo (usuário, dependência…) | painel `f` | — |
+| arquitetura | painel `f` | `--arch` |
+| tamanho (presets >100 MiB, >10 MiB, >1 MiB, <1 MiB) | painel `f` | `--min-size` / `--max-size` |
+| data de instalação (7/30/90 dias, este ano) | painel `f` | `--installed-since` |
+| só marcados / protegidos | painel `f` | — |
+| com atualização | painel `f` | `--with-updates` |
+
+Ordenação (`s` / `--sort`): nome, tamanho, data, repo, motivo, categoria,
+família, arquitetura.
 
 ## Segurança
 
@@ -79,8 +127,9 @@ ordena, clique na aba troca de aba.
 - **O resolvedor é a rede final.** Se o DNF reportar qualquer problema de
   resolução, a execução é recusada — cobre dependências que a lista estática
   não conhece.
-- **Marcações em arquivo.** `~/.local/state/dnfm/marks.json`, gravação atômica,
-  arquivo corrompido vira `marks.json.corrupt` em vez de sumir.
+- **Marcações em arquivo.** `~/.local/state/dnfm/marks.json` e
+  `~/.local/state/dnfm/categories.json`, gravação atômica; arquivo corrompido
+  vira `*.json.corrupt` em vez de sumir.
 
 ## Arquitetura
 

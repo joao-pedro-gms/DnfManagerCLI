@@ -7,12 +7,12 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Cell, Paragraph, Row, Table, TableState, Tabs, Wrap};
 use ratatui::Frame;
 
+use crate::app::{App, Modal, RowRef, Tab};
+
 mod modals;
 
-use crate::app::{App, Modal, Tab};
-use modals::{draw_error, draw_help, draw_preview, draw_progress};
-
-const HINT: &str = "espaço marca · p preview · / busca · s ordena · tab abas · ? ajuda · q sai";
+pub(crate) const HINT: &str =
+    "␣ marca · t categoria · f filtros · o agrupa · p preview · / busca · s ordena · ? ajuda · q sai";
 
 pub fn draw(frame: &mut Frame, app: &mut App) {
     let [header, body, details, footer] = Layout::vertical([
@@ -28,26 +28,41 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     draw_details(frame, app, details);
     draw_footer(frame, app, footer);
 
-    // Modais por cima de tudo.
+    // Sobreposições, da mais específica para a mais genérica.
+    if app.assign_input.is_some() {
+        modals::draw_assign(frame, app, frame.area());
+    }
+    if let Some(picker) = app.picker.clone() {
+        modals::draw_picker(frame, app, frame.area(), &picker);
+    } else if app.filter_panel.is_some() {
+        modals::draw_filter_panel(frame, app, frame.area());
+    }
     if let Some(modal) = app.modal.clone() {
         match modal {
-            Modal::Help => draw_help(frame, frame.area()),
-            Modal::Error(message) => draw_error(frame, frame.area(), &message),
+            Modal::Help => modals::draw_help(frame, frame.area()),
+            Modal::Error(message) => modals::draw_error(frame, frame.area(), &message),
             Modal::Preview(preview) => {
-                draw_preview(frame, frame.area(), &preview, &app.pending_specs)
+                modals::draw_preview(frame, frame.area(), &preview, &app.pending_specs)
             }
-            Modal::Progress => draw_progress(frame, app, frame.area()),
+            Modal::Progress => modals::draw_progress(frame, app, frame.area()),
         }
     }
 }
 
 fn draw_header(frame: &mut Frame, app: &App, area: Rect) {
     let marked = app.marks.len();
+    let active = app.filter.active_count();
+    let filtro = if active > 0 {
+        format!(" · {active} filtro(s)")
+    } else {
+        String::new()
+    };
     let title = format!(
-        " dnfm · {} instalados · {} atualizações · {} marcados ",
+        " dnfm · {} instalados · {} atualizações · {} marcados · {} categorias{filtro} ",
         app.installed.len(),
         app.upgrades.len(),
-        marked
+        marked,
+        app.taxonomy.category_count()
     );
     let titles: Vec<Line> = Tab::ALL
         .iter()
@@ -72,8 +87,14 @@ fn draw_header(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn draw_table(frame: &mut Frame, app: &mut App, area: Rect) {
+    let title = match app.tab {
+        Tab::Installed if app.group != dnfm_core::categories::GroupMode::None => {
+            format!(" {} · agrupado por {} ", app.tab.title(), app.group.label())
+        }
+        _ => format!(" {} ", app.tab.title()),
+    };
     let block = Block::bordered()
-        .title(format!(" {} ", app.tab.title()))
+        .title(title)
         .border_style(Style::default().fg(Color::DarkGray));
     let inner = block.inner(area);
     frame.render_widget(block, area);
@@ -119,16 +140,18 @@ fn table_layout(tab: Tab) -> (Vec<&'static str>, Vec<Constraint>) {
                 "repo",
                 "tamanho",
                 "instalado",
+                "categoria",
                 "motivo",
             ],
             vec![
                 Constraint::Length(4),
                 Constraint::Length(30),
-                Constraint::Length(24),
-                Constraint::Length(12),
+                Constraint::Length(22),
+                Constraint::Length(11),
                 Constraint::Length(10),
                 Constraint::Length(11),
-                Constraint::Min(10),
+                Constraint::Length(18),
+                Constraint::Min(9),
             ],
         ),
         Tab::Updates => (
@@ -172,12 +195,34 @@ fn table_layout(tab: Tab) -> (Vec<&'static str>, Vec<Constraint>) {
 
 fn build_row(app: &App, idx: usize) -> Row<'static> {
     match app.tab {
-        Tab::Installed => {
-            let Some(pkg) = app.visible.get(idx).and_then(|i| app.installed.get(*i)) else {
-                return Row::new(Vec::<Cell>::new());
-            };
-            package_row(app, pkg)
-        }
+        Tab::Installed => match app.rows.get(idx) {
+            Some(RowRef::Header {
+                label,
+                count,
+                collapsed,
+            }) => {
+                let marker = if *collapsed { "▶" } else { "▼" };
+                let mut cells = vec![
+                    Cell::from(marker).style(Style::default().fg(Color::Cyan)),
+                    Cell::from(label.clone()).style(
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
+                    ),
+                    Cell::from(format!("{count} pacote(s)"))
+                        .style(Style::default().fg(Color::DarkGray)),
+                ];
+                while cells.len() < 8 {
+                    cells.push(Cell::from(""));
+                }
+                Row::new(cells)
+            }
+            Some(RowRef::Package { index }) => match app.installed.get(*index) {
+                Some(pkg) => package_row(app, pkg),
+                None => Row::new(Vec::<Cell>::new()),
+            },
+            None => Row::new(Vec::<Cell>::new()),
+        },
         Tab::Orphans => match app.orphans.get(idx) {
             Some(pkg) => package_row(app, pkg),
             None => Row::new(Vec::<Cell>::new()),
@@ -255,6 +300,12 @@ fn package_row(app: &App, pkg: &dnfm_core::Package) -> Row<'static> {
     } else {
         Style::default()
     };
+    let category = app.category_label(pkg);
+    let category_style = if app.custom_categories.get(&pkg.name, &pkg.arch).is_some() {
+        Style::default().fg(Color::Magenta)
+    } else {
+        Style::default().fg(Color::Gray)
+    };
     Row::new(vec![
         Cell::from(checked),
         Cell::from(pkg.name.clone()).style(name_style),
@@ -262,6 +313,7 @@ fn package_row(app: &App, pkg: &dnfm_core::Package) -> Row<'static> {
         Cell::from(pkg.repo_id.clone()).style(Style::default().fg(Color::DarkGray)),
         Cell::from(format_size(pkg.size)),
         Cell::from(format_date(pkg.install_time)).style(Style::default().fg(Color::DarkGray)),
+        Cell::from(category.to_string()).style(category_style),
         Cell::from(pkg.reason.label()).style(match pkg.reason {
             Reason::User => Style::default().fg(Color::Cyan),
             _ => Style::default().fg(Color::DarkGray),
@@ -285,6 +337,11 @@ fn draw_details(frame: &mut Frame, app: &App, area: Rect) {
             Span::styled(pkg.evr.clone(), Style::default().fg(Color::DarkGray)),
             Span::raw("  "),
             Span::styled(pkg.arch.clone(), Style::default().fg(Color::DarkGray)),
+            Span::raw("  "),
+            Span::styled(
+                format!("[{}]", app.category_label(pkg)),
+                Style::default().fg(Color::Cyan),
+            ),
         ]));
         lines.push(Line::from(pkg.summary.clone()));
         if let Some(details) = &app.details {
@@ -353,6 +410,20 @@ fn draw_details(frame: &mut Frame, app: &App, area: Rect) {
                 Style::default().fg(Color::Yellow),
             )));
         }
+    } else if let Some(RowRef::Header { label, count, .. }) = app.current_row() {
+        lines.push(Line::from(vec![
+            Span::styled(
+                label.clone(),
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(format!("  {count} pacote(s)")),
+        ]));
+        lines.push(Line::from(Span::styled(
+            "espaço recolhe/expande o grupo · a marca o grupo inteiro",
+            Style::default().fg(Color::DarkGray),
+        )));
     } else {
         lines.push(Line::from(Span::styled(
             "nada selecionado",
@@ -386,6 +457,11 @@ fn draw_footer(frame: &mut Frame, app: &App, area: Rect) {
             ),
         ])
     } else {
+        let filtros = if app.filter.is_active() {
+            format!("filtros({})", app.filter.active_count())
+        } else {
+            "sem filtro".to_string()
+        };
         Line::from(vec![
             Span::styled(app.status.clone(), status_style),
             Span::raw("  "),
@@ -393,6 +469,13 @@ fn draw_footer(frame: &mut Frame, app: &App, area: Rect) {
                 format!("[{}]", app.sort.label()),
                 Style::default().fg(Color::DarkGray),
             ),
+            Span::raw("  "),
+            Span::styled(
+                format!("[{}]", app.group.label()),
+                Style::default().fg(Color::DarkGray),
+            ),
+            Span::raw("  "),
+            Span::styled(filtros, Style::default().fg(Color::DarkGray)),
             Span::raw("  "),
             Span::styled(app.selection_label(), Style::default().fg(Color::DarkGray)),
         ])

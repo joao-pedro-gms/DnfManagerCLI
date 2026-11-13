@@ -1,34 +1,49 @@
 //! Estado da aplicação e transições. Nada aqui desenha nem fala com o D-Bus:
 //! efeitos são devolvidos como [`Cmd`] para o laço de eventos executar.
 
+mod filters;
+mod state;
 mod types;
+
+pub use state::*;
+pub use types::*;
 
 use std::collections::HashSet;
 
 use dnfm_core::{
-    select, Filter, HistoryEntry, MarkSet, Package, PackageDetails, ProgressEvent, Repo, SortKey,
+    categories::{group_rows, CustomCategories, GroupMode, Taxonomy},
+    Filter, HistoryEntry, MarkSet, Package, PackageDetails, ProgressEvent, Query, Repo, SortKey,
     Upgrade,
 };
 use ratatui::layout::Rect;
 use ratatui::widgets::TableState;
 
-pub use types::*;
-
 pub struct App {
     pub tab: Tab,
     pub installed: Vec<Package>,
+    /// Índices (em `installed`) que passaram pelo filtro, na ordem escolhida.
     pub visible: Vec<usize>,
+    /// Linhas exibidas: cabeçalhos de grupo intercalados com pacotes.
+    pub rows: Vec<RowRef>,
     pub table: TableState,
     pub scroll: usize,
     pub viewport: usize,
     pub table_area: Rect,
     pub marks: MarkSet,
+    pub custom_categories: CustomCategories,
+    pub taxonomy: Taxonomy,
+    pub group: GroupMode,
+    pub collapsed: HashSet<String>,
     pub filter: Filter,
-    pub sort: SortKey,
-    pub descending: bool,
+    pub filter_panel: Option<FilterPanel>,
+    pub picker: Option<Picker>,
+    pub assign_input: Option<String>,
     /// `Some(buffer)` enquanto o usuário digita a busca.
     pub search: Option<String>,
+    pub sort: SortKey,
+    pub descending: bool,
     pub upgrades: Vec<Upgrade>,
+    pub upgradable_names: HashSet<String>,
     pub selected_upgrades: HashSet<String>,
     pub orphans: Vec<Package>,
     pub history: Vec<HistoryEntry>,
@@ -44,8 +59,8 @@ pub struct App {
     pub orphans_loading: bool,
     pub history_loaded: bool,
     pub history_loading: bool,
-    pub last_refresh: Option<std::time::Instant>,
     pub pending_specs: Vec<String>,
+    pub last_refresh: Option<std::time::Instant>,
 }
 
 impl Default for App {
@@ -54,16 +69,25 @@ impl Default for App {
             tab: Tab::Installed,
             installed: Vec::new(),
             visible: Vec::new(),
+            rows: Vec::new(),
             table: TableState::default(),
             scroll: 0,
             viewport: 20,
             table_area: Rect::default(),
             marks: MarkSet::empty(),
+            custom_categories: CustomCategories::empty(),
+            taxonomy: Taxonomy::default(),
+            group: GroupMode::None,
+            collapsed: HashSet::new(),
             filter: Filter::default(),
+            filter_panel: None,
+            picker: None,
+            assign_input: None,
+            search: None,
             sort: SortKey::Name,
             descending: false,
-            search: None,
             upgrades: Vec::new(),
+            upgradable_names: HashSet::new(),
             selected_upgrades: HashSet::new(),
             orphans: Vec::new(),
             history: Vec::new(),
@@ -79,23 +103,24 @@ impl Default for App {
             orphans_loading: false,
             history_loaded: false,
             history_loading: false,
-            last_refresh: None,
             pending_specs: Vec::new(),
+            last_refresh: None,
         }
     }
 }
 
 impl App {
-    pub fn with_marks(marks: MarkSet) -> Self {
+    pub fn new(marks: MarkSet, custom: CustomCategories) -> Self {
         Self {
             marks,
+            custom_categories: custom,
             ..Default::default()
         }
     }
 
     pub fn rows_len(&self) -> usize {
         match self.tab {
-            Tab::Installed => self.visible.len(),
+            Tab::Installed => self.rows.len(),
             Tab::Updates => self.upgrades.len(),
             Tab::Orphans => self.orphans.len(),
             Tab::History => self.history.len(),
@@ -104,16 +129,27 @@ impl App {
     }
 
     pub fn selected_index(&self) -> usize {
-        self.table
-            .selected()
-            .unwrap_or(0)
-            .min(self.rows_len().saturating_sub(1))
+        let len = self.rows_len();
+        if len == 0 {
+            return 0;
+        }
+        self.table.selected().unwrap_or(0).min(len - 1)
+    }
+
+    pub fn current_row(&self) -> Option<&RowRef> {
+        if self.tab != Tab::Installed {
+            return None;
+        }
+        self.rows.get(self.selected_index())
     }
 
     pub fn current_package(&self) -> Option<&Package> {
         let idx = self.selected_index();
         match self.tab {
-            Tab::Installed => self.visible.get(idx).and_then(|i| self.installed.get(*i)),
+            Tab::Installed => match self.rows.get(idx)? {
+                RowRef::Package { index } => self.installed.get(*index),
+                RowRef::Header { .. } => None,
+            },
             Tab::Orphans => self.orphans.get(idx),
             _ => None,
         }
@@ -127,28 +163,102 @@ impl App {
         self.marks.contains(&pkg.name, &pkg.arch)
     }
 
-    /// Recalcula a lista visível aplicando filtro, busca e ordenação.
+    pub fn category_label(&self, pkg: &Package) -> &str {
+        self.taxonomy.category_of(pkg)
+    }
+
+    /// Recalcula filtro, ordenação, grupos e a lista de linhas.
     pub fn refresh(&mut self) {
-        self.filter.marked_only = false;
-        self.visible = select(
-            &self.installed,
-            &self.filter,
-            self.sort,
-            self.descending,
-            &self.marks,
-        );
-        self.last_refresh = Some(std::time::Instant::now());
-        let max = self.visible.len().saturating_sub(1);
-        if let Some(sel) = self.table.selected() {
-            self.table.select(Some(sel.min(max)));
-        } else if !self.visible.is_empty() {
-            self.table.select(Some(0));
+        self.upgradable_names = self
+            .upgrades
+            .iter()
+            .map(|u| u.installed.name.clone())
+            .collect();
+
+        self.visible = Query {
+            filter: &self.filter,
+            sort: self.sort,
+            descending: self.descending,
+            marks: &self.marks,
+            taxonomy: &self.taxonomy,
+            upgradable: &self.upgradable_names,
         }
-        // Descarta marcações de pacotes que não existem mais.
+        .apply(&self.installed);
+
+        self.rebuild_rows();
+
         if !self.installed.is_empty() {
             let names: Vec<&str> = self.installed.iter().map(|p| p.name.as_str()).collect();
             self.marks.prune(&names);
+            self.custom_categories.prune(&names);
         }
+
+        self.ensure_package_selection();
+        self.last_refresh = Some(std::time::Instant::now());
+    }
+
+    /// Reconstrói as linhas a partir dos grupos, respeitando os recolhidos.
+    pub fn rebuild_rows(&mut self) {
+        let groups = group_rows(&self.installed, &self.visible, self.group, &self.taxonomy);
+        self.rows.clear();
+        if self.group == GroupMode::None {
+            for idx in &self.visible {
+                self.rows.push(RowRef::Package { index: *idx });
+            }
+            return;
+        }
+        for group in groups {
+            let collapsed = self.collapsed.contains(&group.label);
+            self.rows.push(RowRef::Header {
+                label: group.label.clone(),
+                count: group.len(),
+                collapsed,
+            });
+            if collapsed {
+                continue;
+            }
+            for idx in group.members {
+                self.rows.push(RowRef::Package { index: idx });
+            }
+        }
+    }
+
+    /// Garante que o cursor esteja sobre um pacote (nunca sobre cabeçalho).
+    pub fn ensure_package_selection(&mut self) {
+        if self.tab != Tab::Installed {
+            let len = self.rows_len();
+            if len == 0 {
+                self.table.select(None);
+            } else if self.table.selected().unwrap_or(0) >= len {
+                self.table.select(Some(len - 1));
+            }
+            return;
+        }
+        if self.rows.is_empty() {
+            self.table.select(None);
+            return;
+        }
+        let mut idx = self.table.selected().unwrap_or(0);
+        if idx >= self.rows.len() {
+            idx = self.rows.len() - 1;
+        }
+        if self.rows[idx].is_header() {
+            match self.rows[idx..]
+                .iter()
+                .position(|row| !row.is_header())
+                .map(|offset| idx + offset)
+            {
+                Some(next) => idx = next,
+                None => {
+                    // Grupo recolhido no fim da lista: volta para o primeiro pacote.
+                    if let Some(first) = self.rows.iter().position(|row| !row.is_header()) {
+                        idx = first;
+                    }
+                }
+            }
+        }
+        self.table.select(Some(idx));
+        self.follow_selection();
     }
 
     pub fn move_selection(&mut self, delta: isize) {
@@ -157,9 +267,28 @@ impl App {
             self.table.select(None);
             return;
         }
-        let current = self.selected_index() as isize;
-        let next = (current + delta).clamp(0, len as isize - 1);
-        self.table.select(Some(next as usize));
+        if self.tab != Tab::Installed {
+            let next = (self.selected_index() as isize + delta).clamp(0, len as isize - 1);
+            self.table.select(Some(next as usize));
+            self.follow_selection();
+            return;
+        }
+
+        let step: isize = if delta >= 0 { 1 } else { -1 };
+        let mut remaining = delta.abs();
+        let mut idx = self.selected_index() as isize;
+        while remaining > 0 {
+            let mut next = idx + step;
+            while next >= 0 && (next as usize) < len && self.rows[next as usize].is_header() {
+                next += step;
+            }
+            if next < 0 || next as usize >= len {
+                break;
+            }
+            idx = next;
+            remaining -= 1;
+        }
+        self.table.select(Some(idx as usize));
         self.follow_selection();
     }
 
@@ -169,7 +298,7 @@ impl App {
         }
         let index = index.min(self.rows_len() - 1);
         self.table.select(Some(index));
-        self.follow_selection();
+        self.ensure_package_selection();
     }
 
     /// Mantém a linha selecionada dentro da janela visível.
@@ -180,6 +309,36 @@ impl App {
         } else if sel >= self.scroll + self.viewport.max(1) {
             self.scroll = sel + 1 - self.viewport.max(1);
         }
+    }
+
+    /// Troca a aba e reposiciona o cursor.
+    pub fn switch_tab(&mut self, tab: Tab) {
+        self.tab = tab;
+        self.scroll = 0;
+        self.table.select(Some(0));
+        self.ensure_package_selection();
+    }
+
+    /// `espaço`: em cabeçalho recolhe/expande o grupo; em pacote marca.
+    pub fn toggle_current(&mut self) {
+        if let Some(RowRef::Header { label, .. }) = self.current_row().cloned() {
+            self.toggle_group(&label);
+            return;
+        }
+        self.toggle_mark_current();
+    }
+
+    pub fn toggle_group(&mut self, label: &str) {
+        if !self.collapsed.remove(label) {
+            self.collapsed.insert(label.to_string());
+        }
+        self.rebuild_rows();
+        self.ensure_package_selection();
+        let collapsed = self.collapsed.contains(label);
+        self.status = format!(
+            "grupo {label} {}",
+            if collapsed { "recolhido" } else { "expandido" }
+        );
     }
 
     pub fn toggle_mark_current(&mut self) {
@@ -196,32 +355,41 @@ impl App {
         } else {
             format!("{} desmarcado", pkg.name)
         };
-        self.refresh();
     }
 
+    /// Marca todos os pacotes do grupo atual (ou todos os visíveis sem grupo).
     pub fn mark_all_visible(&mut self) {
-        let packages: Vec<Package> = self
-            .visible
-            .iter()
-            .filter_map(|i| self.installed.get(*i))
-            .filter(|p| dnfm_core::safety::is_protected(&p.name).is_none())
-            .cloned()
-            .collect();
-        let count = packages.len();
-        for pkg in packages {
-            if !self.marks.contains(&pkg.name, &pkg.arch) {
-                self.marks.mark(&pkg.name, &pkg.arch, &pkg.nevra, None);
+        let targets: Vec<usize> = match self.current_row().cloned() {
+            Some(RowRef::Header { label, .. }) if self.group != GroupMode::None => self
+                .visible
+                .iter()
+                .copied()
+                .filter(|idx| {
+                    self.installed
+                        .get(*idx)
+                        .map(|p| self.taxonomy.label_for(p, self.group) == label)
+                        .unwrap_or(false)
+                })
+                .collect(),
+            _ => self.visible.clone(),
+        };
+        let count = targets.len();
+        for idx in targets {
+            if let Some(pkg) = self.installed.get(idx).cloned() {
+                if dnfm_core::safety::is_protected(&pkg.name).is_none()
+                    && !self.marks.contains(&pkg.name, &pkg.arch)
+                {
+                    self.marks.mark(&pkg.name, &pkg.arch, &pkg.nevra, None);
+                }
             }
         }
         self.status = format!("{count} pacotes marcados");
-        self.refresh();
     }
 
     pub fn clear_marks(&mut self) {
         let count = self.marks.len();
         self.marks.clear();
         self.status = format!("{count} marcações removidas");
-        self.refresh();
     }
 
     pub fn toggle_upgrade_selection(&mut self) {
@@ -242,7 +410,6 @@ impl App {
         self.status = format!("{} atualizações selecionadas", self.selected_upgrades.len());
     }
 
-    /// Pedido de preview: marcações (se houver) ou o pacote sob o cursor.
     /// Pede a carga da aba atual se ela ainda não foi visitada.
     pub fn lazy_request(&mut self) -> Option<Cmd> {
         match self.tab {
@@ -258,6 +425,7 @@ impl App {
         }
     }
 
+    /// Pedido de preview: marcações (se houver) ou o pacote sob o cursor.
     pub fn request_preview(&mut self) -> Option<Cmd> {
         let specs: Vec<String> = if !self.marks.is_empty() {
             self.marks.names()
@@ -281,24 +449,27 @@ impl App {
             AppEvent::Installed(packages) => {
                 self.installed = packages;
                 self.loading = false;
+                self.taxonomy = Taxonomy::build(&self.installed, &self.custom_categories);
                 self.refresh();
                 self.status = format!(
-                    "{} instalados · {} marcados",
+                    "{} instalados · {} categorias · {} marcados",
                     self.installed.len(),
+                    self.taxonomy.category_count(),
                     self.marks.len()
                 );
-                let name = self
+                let nevra = self
                     .current_package()
                     .map(|p| p.nevra.clone())
                     .unwrap_or_default();
-                if !name.is_empty() {
-                    return Some(Cmd::LoadDetails(name));
+                if !nevra.is_empty() {
+                    return Some(Cmd::LoadDetails(nevra));
                 }
                 None
             }
             AppEvent::Upgrades(list) => {
                 self.upgrades = list;
                 self.upgrades_loaded = true;
+                self.refresh();
                 None
             }
             AppEvent::Orphans(list) => {
@@ -358,7 +529,7 @@ impl App {
             }
             AppEvent::Failed(message) => {
                 self.loading = false;
-                if self.modal_matches_progress() {
+                if matches!(self.modal, Some(Modal::Progress)) {
                     self.progress.success = Some(false);
                 }
                 self.status = message.clone();
@@ -376,10 +547,6 @@ impl App {
                 .collect(),
             _ => Vec::new(),
         }
-    }
-
-    fn modal_matches_progress(&self) -> bool {
-        matches!(self.modal, Some(Modal::Progress))
     }
 
     pub fn apply_progress(&mut self, event: ProgressEvent) {

@@ -70,7 +70,7 @@ pub fn package_json(pkg: &Package) -> serde_json::Value {
     })
 }
 
-pub fn package_row(pkg: &Package, marked: bool) -> Vec<String> {
+pub fn package_row(pkg: &Package, marked: bool, category: &str) -> Vec<String> {
     vec![
         if marked { "x" } else { " " }.to_string(),
         pkg.name.clone(),
@@ -79,11 +79,12 @@ pub fn package_row(pkg: &Package, marked: bool) -> Vec<String> {
         pkg.repo_id.clone(),
         format_size(pkg.size),
         format_date(pkg.install_time),
+        category.to_string(),
         pkg.reason.label().to_string(),
     ]
 }
 
-pub const PACKAGE_HEADERS: [&str; 8] = [
+pub const PACKAGE_HEADERS: [&str; 9] = [
     "M",
     "nome",
     "versão",
@@ -91,6 +92,7 @@ pub const PACKAGE_HEADERS: [&str; 8] = [
     "repo",
     "tamanho",
     "instalado",
+    "categoria",
     "motivo",
 ];
 

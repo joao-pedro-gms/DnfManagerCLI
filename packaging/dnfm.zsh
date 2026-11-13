@@ -42,15 +42,68 @@ _arguments "${_arguments_options[@]}" : \
 '*--pattern=[Padrões de busca (nome ou trecho)]:PATTERN:_default' \
 '-r+[Filtra por repositório]:REPO:_default' \
 '--repo=[Filtra por repositório]:REPO:_default' \
-'-s+[Ordenação\: name, size, date, repo, reason]:SORT:_default' \
-'--sort=[Ordenação\: name, size, date, repo, reason]:SORT:_default' \
+'*--category=[Filtra por categoria (repetível)]:CATEGORIA:_default' \
+'*--family=[Filtra por família (repetível)]:FAMÍLIA:_default' \
+'--arch=[Filtra por arquitetura]:ARCH:_default' \
+'--min-size=[Tamanho mínimo (bytes ou sufixo\: 10M, 1G)]:MIN_SIZE:_default' \
+'--max-size=[Tamanho máximo (bytes ou sufixo\: 10M, 1G)]:MAX_SIZE:_default' \
+'--installed-since=[Instalados nos últimos N dias]:DIAS:_default' \
+'-s+[Ordenação\: name, size, date, repo, reason, category, family, arch]:SORT:_default' \
+'--sort=[Ordenação\: name, size, date, repo, reason, category, family, arch]:SORT:_default' \
+'-g+[Agrupamento\: none, category, family, repo, reason]:GROUP_BY:_default' \
+'--group-by=[Agrupamento\: none, category, family, repo, reason]:GROUP_BY:_default' \
 '-n+[Limita o número de linhas]:LIMIT:_default' \
 '--limit=[Limita o número de linhas]:LIMIT:_default' \
+'--with-updates[Só pacotes com atualização disponível]' \
 '--json[Saída em JSON]' \
 '--fake[Usa dados de exemplo em vez do daemon (demonstração e testes)]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0
+;;
+(categories)
+_arguments "${_arguments_options[@]}" : \
+'--json[Saída em JSON]' \
+'--fake[Usa dados de exemplo em vez do daemon (demonstração e testes)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+":: :_dnfm__subcmd__categories_commands" \
+"*::: :->categories" \
+&& ret=0
+
+    case $state in
+    (categories)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:dnfm-categories-command-$line[1]:"
+        case $line[1] in
+            (assign)
+_arguments "${_arguments_options[@]}" : \
+'--fake[Usa dados de exemplo em vez do daemon (demonstração e testes)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+':label -- Nome da categoria (criada se não existir):_default' \
+'*::packages -- Pacotes instalados:_default' \
+&& ret=0
+;;
+(rm)
+_arguments "${_arguments_options[@]}" : \
+'--fake[Usa dados de exemplo em vez do daemon (demonstração e testes)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+'*::packages:_default' \
+&& ret=0
+;;
+(clear)
+_arguments "${_arguments_options[@]}" : \
+'--fake[Usa dados de exemplo em vez do daemon (demonstração e testes)]' \
+'-h[Print help]' \
+'--help[Print help]' \
+&& ret=0
+;;
+        esac
+    ;;
+esac
 ;;
 (updates)
 _arguments "${_arguments_options[@]}" : \
@@ -161,6 +214,7 @@ _dnfm_commands() {
     local commands; commands=(
 'tui:Abre a interface de terminal' \
 'list:Lista pacotes instalados' \
+'categories:Lista e edita categorias próprias' \
 'updates:Mostra atualizações disponíveis' \
 'marks:Gerencia a lista de pacotes marcados para remoção' \
 'remove:Remove pacotes (com prévia obrigatória)' \
@@ -170,6 +224,30 @@ _dnfm_commands() {
 'completions:Gera script de completação de shell' \
     )
     _describe -t commands 'dnfm commands' commands "$@"
+}
+(( $+functions[_dnfm__subcmd__categories_commands] )) ||
+_dnfm__subcmd__categories_commands() {
+    local commands; commands=(
+'assign:Atribui uma categoria aos pacotes' \
+'rm:Remove a categoria própria dos pacotes' \
+'clear:Remove todas as atribuições' \
+    )
+    _describe -t commands 'dnfm categories commands' commands "$@"
+}
+(( $+functions[_dnfm__subcmd__categories__subcmd__assign_commands] )) ||
+_dnfm__subcmd__categories__subcmd__assign_commands() {
+    local commands; commands=()
+    _describe -t commands 'dnfm categories assign commands' commands "$@"
+}
+(( $+functions[_dnfm__subcmd__categories__subcmd__clear_commands] )) ||
+_dnfm__subcmd__categories__subcmd__clear_commands() {
+    local commands; commands=()
+    _describe -t commands 'dnfm categories clear commands' commands "$@"
+}
+(( $+functions[_dnfm__subcmd__categories__subcmd__rm_commands] )) ||
+_dnfm__subcmd__categories__subcmd__rm_commands() {
+    local commands; commands=()
+    _describe -t commands 'dnfm categories rm commands' commands "$@"
 }
 (( $+functions[_dnfm__subcmd__completions_commands] )) ||
 _dnfm__subcmd__completions_commands() {

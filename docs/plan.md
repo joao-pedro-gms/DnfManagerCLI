@@ -357,3 +357,62 @@ Desvios em relação ao plano:
 3. **Advisory por pacote custa uma chamada por nome** (`contains_pkgs`, ~40 ms
    cada). Para 48 atualizações isso roda em background e não trava a UI; se o
    número crescer, vale paralelizar.
+
+---
+
+## 12. Extensão entregue: categorias, agrupamento e filtros
+
+Pedido: agrupar pacotes por categorias e ter filtros e ordenações variados.
+
+### O que a medição mostrou antes de decidir
+
+| Fonte candidata | Realidade no sistema |
+|---|---|
+| Tag `Group` do RPM | 7.993 de 8.009 pacotes vêm como `Unspecified` → inútil |
+| comps (`comps.Group.list`) | 7 grupos cobrindo 137 menções em 8.009 pacotes → insuficiente |
+| Filtro `groups` no `Rpm.list` | ignorado silenciosamente pelo daemon (devolve tudo) |
+| Prefixo do nome | 1.306 prefixos distintos, com cauda longa dominada por `texlive` (4.786) |
+
+Conclusão: a taxonomia tinha que ser **derivada + editável**, não lida de
+metadados que o Fedora não mantém mais.
+
+### Modelo
+
+Três camadas, da mais forte para a mais fraca:
+
+1. **categoria própria** (`categories.json`, XDG) — atribuída por `t` na TUI ou
+   `dnfm categories assign`; vence qualquer regra;
+2. **categoria curada** — 60 apelidos de prefixo + 12 regras de palavra-chave,
+   aplicadas ao nome; 30 categorias na instalação do autor, com "Outros" em 15%;
+3. **família** — prefixo com apelidos, famílias < 3 pacotes em "Outros".
+
+### Superfície entregue
+
+- **TUI**: agrupamento (`o`) por categoria/família/repo/motivo, cabeçalhos
+  recolhíveis (`espaço`), `a` marca o grupo inteiro, painel de filtros (`f`) com
+  12 facetas, seletor multi-escolha com busca (`c`/`C`), atribuição de categoria
+  (`t`/`T`), coluna de categoria na tabela e no painel de detalhes.
+- **CLI**: `list --category/--family/--arch/--min-size/--max-size/
+  --installed-since/--with-updates --sort {category,family,arch,…} --group-by
+  {category,family,repo,reason}`, além de `dnfm categories [assign|rm|clear]`.
+- **Busca/ordenação**: `Query` com contexto (marcas, taxonomia, atualizações)
+  aplicando filtro E entre dimensões e OU dentro de categorias/famílias.
+
+### Evidências
+
+- 76 testes automatizados (38 core, 5 modelo, 8 lógica da TUI, 13 teclado,
+  12 renderização) + 7 de integração `#[ignore]` (6 D-Bus + 1 render real).
+- Teste de render com dados reais: 8.009 instalados → 30 categorias → 8.039
+  linhas (pacotes + cabeçalhos), maiores grupos TeX Live (4.787), Outros
+  (1.217), Bibliotecas (744); filtro por categoria casa exatamente a contagem
+  do grupo.
+- `cargo clippy --workspace --all-targets -- -D warnings` limpo.
+
+### Limitações conhecidas
+
+- O agrupamento é aplicado à aba de instalados; órfãos lista plano.
+- Categorizar marcações em massa exige marcar primeiro (`t` usa os marcados, se
+  houver; senão o pacote sob o cursor).
+- Renomear categoria não existe: atribuir com o novo nome e remover a antiga.
+
+---

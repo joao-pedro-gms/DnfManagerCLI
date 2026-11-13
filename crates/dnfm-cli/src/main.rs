@@ -54,12 +54,45 @@ enum Command {
         /// Filtra por repositório
         #[arg(short, long)]
         repo: Option<String>,
-        /// Ordenação: name, size, date, repo, reason
+        /// Filtra por categoria (repetível)
+        #[arg(long, value_name = "CATEGORIA")]
+        category: Vec<String>,
+        /// Filtra por família (repetível)
+        #[arg(long, value_name = "FAMÍLIA")]
+        family: Vec<String>,
+        /// Filtra por arquitetura
+        #[arg(long)]
+        arch: Option<String>,
+        /// Tamanho mínimo (bytes ou sufixo: 10M, 1G)
+        #[arg(long, value_parser = parse_size)]
+        min_size: Option<u64>,
+        /// Tamanho máximo (bytes ou sufixo: 10M, 1G)
+        #[arg(long, value_parser = parse_size)]
+        max_size: Option<u64>,
+        /// Instalados nos últimos N dias
+        #[arg(long, value_name = "DIAS")]
+        installed_since: Option<i64>,
+        /// Só pacotes com atualização disponível
+        #[arg(long)]
+        with_updates: bool,
+        /// Ordenação: name, size, date, repo, reason, category, family, arch
         #[arg(short, long, default_value = "name")]
         sort: String,
+        /// Agrupamento: none, category, family, repo, reason
+        #[arg(short = 'g', long, default_value = "none")]
+        group_by: String,
         /// Limita o número de linhas
         #[arg(short = 'n', long)]
         limit: Option<usize>,
+        /// Saída em JSON
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Lista e edita categorias próprias
+    Categories {
+        #[command(subcommand)]
+        action: Option<CategoriesAction>,
         /// Saída em JSON
         #[arg(long)]
         json: bool,
@@ -135,6 +168,21 @@ enum Command {
 }
 
 #[derive(Subcommand, Debug)]
+enum CategoriesAction {
+    /// Atribui uma categoria aos pacotes
+    Assign {
+        /// Nome da categoria (criada se não existir)
+        label: String,
+        /// Pacotes instalados
+        packages: Vec<String>,
+    },
+    /// Remove a categoria própria dos pacotes
+    Rm { packages: Vec<String> },
+    /// Remove todas as atribuições
+    Clear,
+}
+
+#[derive(Subcommand, Debug)]
 enum MarksAction {
     /// Marca pacotes instalados
     Add { packages: Vec<String> },
@@ -172,7 +220,15 @@ async fn run() -> i32 {
         Some(Command::List {
             pattern,
             repo,
+            category,
+            family,
+            arch,
+            min_size,
+            max_size,
+            installed_since,
+            with_updates,
             sort,
+            group_by,
             limit,
             json,
         }) => {
@@ -185,12 +241,35 @@ async fn run() -> i32 {
                 cmd::ListOptions {
                     pattern,
                     repo,
+                    category,
+                    family,
+                    arch,
+                    min_size,
+                    max_size,
+                    installed_since_days: installed_since,
+                    with_updates,
                     sort,
+                    group_by,
                     limit,
                     json,
                 },
             )
             .await
+        }
+        Some(Command::Categories { action, json }) => {
+            let backend = match connect(cli.fake).await {
+                Ok(backend) => backend,
+                Err(err) => return cmd::report_err(&err),
+            };
+            let action = match action {
+                None => cmd::CategoryAction::List,
+                Some(CategoriesAction::Assign { label, packages }) => {
+                    cmd::CategoryAction::Assign { label, packages }
+                }
+                Some(CategoriesAction::Rm { packages }) => cmd::CategoryAction::Remove { packages },
+                Some(CategoriesAction::Clear) => cmd::CategoryAction::Clear,
+            };
+            cmd::categories(&backend, cmd::CategoriesOptions { action, json }).await
         }
         Some(Command::Updates {
             security_only,
@@ -281,6 +360,26 @@ async fn run() -> i32 {
             cmd::repos(&backend, json).await
         }
     }
+}
+
+/// Aceita `1024`, `10K`, `10M`, `1G` (base 1024).
+fn parse_size(raw: &str) -> Result<u64, String> {
+    let text = raw.trim();
+    if text.is_empty() {
+        return Err("tamanho vazio".to_string());
+    }
+    let (number, multiplier) = match text.chars().last().unwrap().to_ascii_lowercase() {
+        'k' => (&text[..text.len() - 1], 1024u64),
+        'm' => (&text[..text.len() - 1], 1024 * 1024),
+        'g' => (&text[..text.len() - 1], 1024 * 1024 * 1024),
+        't' => (&text[..text.len() - 1], 1024u64 * 1024 * 1024 * 1024),
+        _ => (text, 1),
+    };
+    let value: f64 = number
+        .trim()
+        .parse()
+        .map_err(|_| format!("tamanho inválido: {raw}"))?;
+    Ok((value * multiplier as f64) as u64)
 }
 
 async fn connect(fake: bool) -> Result<Arc<dyn DnfBackend>, dnfm_core::BackendError> {

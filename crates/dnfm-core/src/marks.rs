@@ -39,14 +39,6 @@ pub struct MarkSet {
     dirty: bool,
 }
 
-fn state_dir() -> PathBuf {
-    if let Some(dir) = std::env::var_os("XDG_STATE_HOME") {
-        return PathBuf::from(dir).join("dnfm");
-    }
-    let home = std::env::var_os("HOME").unwrap_or_default();
-    PathBuf::from(home).join(".local/state/dnfm")
-}
-
 fn key(name: &str, arch: &str) -> String {
     format!("{name}.{arch}")
 }
@@ -58,7 +50,7 @@ impl MarkSet {
     }
 
     pub fn default_path() -> PathBuf {
-        state_dir().join("marks.json")
+        crate::paths::state_dir().join("marks.json")
     }
 
     /// Carrega as marcações; arquivo ausente ou corrompido vira conjunto vazio.

@@ -14,7 +14,7 @@ use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
-use dnfm_core::{DnfBackend, MarkSet, ProgressEvent};
+use dnfm_core::{CustomCategories, DnfBackend, MarkSet, ProgressEvent};
 use futures_util::StreamExt;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
@@ -42,7 +42,7 @@ fn init_terminal() -> anyhow::Result<Terminal<CrosstermBackend<io::Stdout>>> {
 
 /// Roda a interface até o usuário sair.
 pub async fn run(backend: Arc<dyn DnfBackend>) -> anyhow::Result<App> {
-    let mut app = App::with_marks(MarkSet::load_default());
+    let mut app = App::new(MarkSet::load_default(), CustomCategories::load_default());
     let mut terminal = init_terminal()?;
     let _guard = TerminalGuard;
 
@@ -89,6 +89,12 @@ pub async fn run(backend: Arc<dyn DnfBackend>) -> anyhow::Result<App> {
                         app.status = format!("erro ao gravar marcações: {err}");
                     }
                 }
+                if app.custom_categories.is_dirty() {
+                    if let Err(err) = app.custom_categories.save() {
+                        tracing::warn!(%err, "não consegui gravar as categorias");
+                        app.status = format!("erro ao gravar categorias: {err}");
+                    }
+                }
             }
         }
 
@@ -101,6 +107,7 @@ pub async fn run(backend: Arc<dyn DnfBackend>) -> anyhow::Result<App> {
 
     // Última gravação antes de sair.
     let _ = app.marks.save();
+    let _ = app.custom_categories.save();
     Ok(app)
 }
 

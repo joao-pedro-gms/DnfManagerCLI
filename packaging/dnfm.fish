@@ -29,6 +29,7 @@ complete -c dnfm -n "__fish_dnfm_needs_command" -s h -l help -d 'Print help'
 complete -c dnfm -n "__fish_dnfm_needs_command" -s V -l version -d 'Print version'
 complete -c dnfm -n "__fish_dnfm_needs_command" -f -a "tui" -d 'Abre a interface de terminal'
 complete -c dnfm -n "__fish_dnfm_needs_command" -f -a "list" -d 'Lista pacotes instalados'
+complete -c dnfm -n "__fish_dnfm_needs_command" -f -a "categories" -d 'Lista e edita categorias próprias'
 complete -c dnfm -n "__fish_dnfm_needs_command" -f -a "updates" -d 'Mostra atualizações disponíveis'
 complete -c dnfm -n "__fish_dnfm_needs_command" -f -a "marks" -d 'Gerencia a lista de pacotes marcados para remoção'
 complete -c dnfm -n "__fish_dnfm_needs_command" -f -a "remove" -d 'Remove pacotes (com prévia obrigatória)'
@@ -40,11 +41,31 @@ complete -c dnfm -n "__fish_dnfm_using_subcommand tui" -l fake -d 'Usa dados de 
 complete -c dnfm -n "__fish_dnfm_using_subcommand tui" -s h -l help -d 'Print help'
 complete -c dnfm -n "__fish_dnfm_using_subcommand list" -s p -l pattern -d 'Padrões de busca (nome ou trecho)' -r
 complete -c dnfm -n "__fish_dnfm_using_subcommand list" -s r -l repo -d 'Filtra por repositório' -r
-complete -c dnfm -n "__fish_dnfm_using_subcommand list" -s s -l sort -d 'Ordenação: name, size, date, repo, reason' -r
+complete -c dnfm -n "__fish_dnfm_using_subcommand list" -l category -d 'Filtra por categoria (repetível)' -r
+complete -c dnfm -n "__fish_dnfm_using_subcommand list" -l family -d 'Filtra por família (repetível)' -r
+complete -c dnfm -n "__fish_dnfm_using_subcommand list" -l arch -d 'Filtra por arquitetura' -r
+complete -c dnfm -n "__fish_dnfm_using_subcommand list" -l min-size -d 'Tamanho mínimo (bytes ou sufixo: 10M, 1G)' -r
+complete -c dnfm -n "__fish_dnfm_using_subcommand list" -l max-size -d 'Tamanho máximo (bytes ou sufixo: 10M, 1G)' -r
+complete -c dnfm -n "__fish_dnfm_using_subcommand list" -l installed-since -d 'Instalados nos últimos N dias' -r
+complete -c dnfm -n "__fish_dnfm_using_subcommand list" -s s -l sort -d 'Ordenação: name, size, date, repo, reason, category, family, arch' -r
+complete -c dnfm -n "__fish_dnfm_using_subcommand list" -s g -l group-by -d 'Agrupamento: none, category, family, repo, reason' -r
 complete -c dnfm -n "__fish_dnfm_using_subcommand list" -s n -l limit -d 'Limita o número de linhas' -r
+complete -c dnfm -n "__fish_dnfm_using_subcommand list" -l with-updates -d 'Só pacotes com atualização disponível'
 complete -c dnfm -n "__fish_dnfm_using_subcommand list" -l json -d 'Saída em JSON'
 complete -c dnfm -n "__fish_dnfm_using_subcommand list" -l fake -d 'Usa dados de exemplo em vez do daemon (demonstração e testes)'
 complete -c dnfm -n "__fish_dnfm_using_subcommand list" -s h -l help -d 'Print help'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and not __fish_seen_subcommand_from assign rm clear" -l json -d 'Saída em JSON'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and not __fish_seen_subcommand_from assign rm clear" -l fake -d 'Usa dados de exemplo em vez do daemon (demonstração e testes)'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and not __fish_seen_subcommand_from assign rm clear" -s h -l help -d 'Print help'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and not __fish_seen_subcommand_from assign rm clear" -f -a "assign" -d 'Atribui uma categoria aos pacotes'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and not __fish_seen_subcommand_from assign rm clear" -f -a "rm" -d 'Remove a categoria própria dos pacotes'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and not __fish_seen_subcommand_from assign rm clear" -f -a "clear" -d 'Remove todas as atribuições'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and __fish_seen_subcommand_from assign" -l fake -d 'Usa dados de exemplo em vez do daemon (demonstração e testes)'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and __fish_seen_subcommand_from assign" -s h -l help -d 'Print help'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and __fish_seen_subcommand_from rm" -l fake -d 'Usa dados de exemplo em vez do daemon (demonstração e testes)'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and __fish_seen_subcommand_from rm" -s h -l help -d 'Print help'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and __fish_seen_subcommand_from clear" -l fake -d 'Usa dados de exemplo em vez do daemon (demonstração e testes)'
+complete -c dnfm -n "__fish_dnfm_using_subcommand categories; and __fish_seen_subcommand_from clear" -s h -l help -d 'Print help'
 complete -c dnfm -n "__fish_dnfm_using_subcommand updates" -l security-only -d 'Apenas atualizações de segurança (important/critical)'
 complete -c dnfm -n "__fish_dnfm_using_subcommand updates" -l json -d 'Saída em JSON'
 complete -c dnfm -n "__fish_dnfm_using_subcommand updates" -l fake -d 'Usa dados de exemplo em vez do daemon (demonstração e testes)'

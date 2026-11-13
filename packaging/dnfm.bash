@@ -16,6 +16,9 @@ _dnfm() {
             ",$1")
                 cmd="dnfm"
                 ;;
+            dnfm,categories)
+                cmd="dnfm__subcmd__categories"
+                ;;
             dnfm,completions)
                 cmd="dnfm__subcmd__completions"
                 ;;
@@ -43,6 +46,15 @@ _dnfm() {
             dnfm,updates)
                 cmd="dnfm__subcmd__updates"
                 ;;
+            dnfm__subcmd__categories,assign)
+                cmd="dnfm__subcmd__categories__subcmd__assign"
+                ;;
+            dnfm__subcmd__categories,clear)
+                cmd="dnfm__subcmd__categories__subcmd__clear"
+                ;;
+            dnfm__subcmd__categories,rm)
+                cmd="dnfm__subcmd__categories__subcmd__rm"
+                ;;
             dnfm__subcmd__marks,add)
                 cmd="dnfm__subcmd__marks__subcmd__add"
                 ;;
@@ -59,8 +71,64 @@ _dnfm() {
 
     case "${cmd}" in
         dnfm)
-            opts="-h -V --fake --help --version tui list updates marks remove history orphans repos completions"
+            opts="-h -V --fake --help --version tui list categories updates marks remove history orphans repos completions"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        dnfm__subcmd__categories)
+            opts="-h --json --fake --help assign rm clear"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        dnfm__subcmd__categories__subcmd__assign)
+            opts="-h --fake --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        dnfm__subcmd__categories__subcmd__clear)
+            opts="-h --fake --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        dnfm__subcmd__categories__subcmd__rm)
+            opts="-h --fake --help"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
             fi
@@ -109,7 +177,7 @@ _dnfm() {
             return 0
             ;;
         dnfm__subcmd__list)
-            opts="-p -r -s -n -h --pattern --repo --sort --limit --json --fake --help"
+            opts="-p -r -s -g -n -h --pattern --repo --category --family --arch --min-size --max-size --installed-since --with-updates --sort --group-by --limit --json --fake --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -131,11 +199,43 @@ _dnfm() {
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
+                --category)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --family)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --arch)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --min-size)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --max-size)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --installed-since)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
                 --sort)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;
                 -s)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --group-by)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                -g)
                     COMPREPLY=($(compgen -f "${cur}"))
                     return 0
                     ;;

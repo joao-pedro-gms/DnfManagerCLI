@@ -5,9 +5,11 @@
 
 pub mod attrs;
 pub mod backend;
+pub mod categories;
 pub mod decode;
 pub mod marks;
 pub mod model;
+pub mod paths;
 pub mod query;
 pub mod safety;
 
@@ -17,13 +19,14 @@ pub mod dbus;
 pub mod fake;
 
 pub use backend::{BackendError, DnfBackend};
+pub use categories::{group_rows, CustomCategories, Group, GroupMode, Taxonomy};
 pub use marks::{Mark, MarkSet};
 pub use model::{
     format_date, format_size, Action, Advisory, ConfirmToken, HistoryEntry, Outcome, Package,
     PackageDetails, PlannedPackage, Preview, ProgressEvent, Reason, Repo, ResolveResult, Severity,
     Upgrade,
 };
-pub use query::{select, Filter, SortKey};
+pub use query::{select, DatePreset, Filter, Query, SizePreset, SortKey};
 
 /// Dica de como subir o daemon, mostrada quando a conexão falha.
 pub const DAEMON_HINT: &str = "systemctl start dnf5daemon-server";

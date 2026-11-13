@@ -1,11 +1,12 @@
 //! Renderização da TUI em memória: garante que o desenho não entra em pânico,
 //! que a tabela respeita o viewport e que os modais aparecem.
 
+use dnfm_core::categories::GroupMode;
 use dnfm_core::{
     Action, HistoryEntry, Package, PlannedPackage, Preview, Reason, Repo, ResolveResult, Severity,
     Upgrade,
 };
-use dnfm_tui::app::{App, Modal};
+use dnfm_tui::app::{App, Modal, Picker, PickerTarget};
 use ratatui::backend::TestBackend;
 use ratatui::Terminal;
 
@@ -152,4 +153,101 @@ fn barra_de_status_mostra_protecao() {
     app.toggle_mark_current(); // glibc, protegido
     let screen = render(&mut app, 120, 30);
     assert!(screen.contains("protegido"));
+}
+
+fn app_com_categorias() -> App {
+    let mut app = App {
+        installed: vec![
+            pkg("texlive-a2ping", 1024),
+            pkg("texlive-ae", 2048),
+            pkg("vlc", 4096),
+            pkg("kf6-kcoreaddons", 8192),
+        ],
+        ..Default::default()
+    };
+    app.taxonomy = dnfm_core::categories::Taxonomy::build(
+        &app.installed,
+        &dnfm_core::categories::CustomCategories::empty(),
+    );
+    app.refresh();
+    app
+}
+
+#[test]
+fn agrupamento_por_categoria_desenha_cabecalhos() {
+    let mut app = app_com_categorias();
+    app.group = GroupMode::Category;
+    app.rebuild_rows();
+    let screen = render(&mut app, 140, 40);
+    assert!(
+        screen.contains("TeX Live"),
+        "cabeçalho do grupo deveria aparecer"
+    );
+    assert!(screen.contains("2 pacote(s)"));
+    assert!(screen.contains("agrupado por categoria"));
+}
+
+#[test]
+fn grupo_recolhido_esconde_os_pacotes() {
+    let mut app = app_com_categorias();
+    app.group = GroupMode::Category;
+    app.rebuild_rows();
+    let antes = app.rows_len();
+    app.toggle_group("TeX Live");
+    let depois = app.rows_len();
+    assert!(depois < antes, "recolher deve reduzir as linhas");
+    let screen = render(&mut app, 140, 40);
+    assert!(screen.contains("TeX Live"));
+    assert!(!screen.contains("texlive-a2ping"));
+}
+
+#[test]
+fn painel_de_filtros_lista_facetas() {
+    let mut app = app_com_categorias();
+    app.open_filter_panel();
+    let screen = render(&mut app, 120, 40);
+    for esperado in [
+        "filtros",
+        "categoria",
+        "tamanho",
+        "com atualização",
+        "limpar tudo",
+    ] {
+        assert!(screen.contains(esperado), "faltou a faceta {esperado}");
+    }
+}
+
+#[test]
+fn seletor_mostra_contagens() {
+    let mut app = app_com_categorias();
+    app.open_picker(PickerTarget::Category);
+    let picker: Picker = app.picker.clone().expect("picker aberto");
+    assert!(picker
+        .target_items
+        .iter()
+        .any(|(label, count)| label == "TeX Live" && *count == 2));
+    let screen = render(&mut app, 120, 40);
+    assert!(screen.contains("filtrar por categoria"));
+    assert!(screen.contains("TeX Live"));
+}
+
+#[test]
+fn campo_de_categoria_mostra_o_alvo() {
+    let mut app = app_com_categorias();
+    app.select(0);
+    app.assign_input_start();
+    app.assign_input_push('X');
+    let screen = render(&mut app, 120, 40);
+    assert!(screen.contains("categoria própria"));
+    assert!(screen.contains("enter aplica"));
+}
+
+#[test]
+fn filtro_por_categoria_reduz_a_lista() {
+    let mut app = app_com_categorias();
+    app.filter.categories = vec!["TeX Live".into()];
+    app.refresh();
+    assert_eq!(app.visible.len(), 2);
+    let screen = render(&mut app, 120, 30);
+    assert!(screen.contains("filtros(1)"));
 }
