@@ -416,3 +416,51 @@ Três camadas, da mais forte para a mais fraca:
 - Renomear categoria não existe: atribuir com o novo nome e remover a antiga.
 
 ---
+
+---
+
+## 13. Refinamento visual e animações da TUI
+
+Pedido: TUI mais refinada, interativa, com animações e visualização clara dos
+agrupamentos e filtros.
+
+### Decisões
+
+| Tema | Decisão | Por quê |
+|---|---|---|
+| Animação | motor próprio com `dt` e curvas de easing (`anim.rs`) | determinístico: os testes avançam o tempo à mão; nada depende da taxa de quadros |
+| Laço | `frame_time()` adaptativo (16 ms animando, 200 ms parado) | animação suave sem gastar CPU à toa |
+| Grupos | sidebar permanente com contagem e barra proporcional | responde "onde estão os pacotes" sem trocar de aba |
+| Filtros | chips clicáveis no cabeçalho | remover um filtro sem abrir o painel de 12 facetas |
+| Tema | três paletas com a mesma hierarquia semântica | trocar de paleta não quebra layout nem contraste |
+| Modais | escala de 88%→100% com sombra deslocada | dar profundidade sem depender de transparência (terminal não tem alfa) |
+
+### O que mudou na prática
+
+- Layout em quatro zonas (cabeçalho 4 linhas, corpo com sidebar, detalhes,
+  rodapé de 2 linhas com keycaps contextuais).
+- Sidebar some abaixo de 92 colunas; o resto do layout se reacomoda.
+- Tabela com zebra, hover, cabeçalhos de grupo com percentual e barra, números
+  alinhados à direita e ícones `▣`/`▨`/`▢` para marcado/protegido/livre.
+- Detalhes com dica quando os metadados ainda não foram carregados e destaque
+  para categoria própria e proteções.
+- `F2` troca a paleta e persiste em `ui.json`; `ctrl+b` alterna o sidebar.
+
+### Evidências
+
+- 100 testes (antes 76): 18 de renderização (sidebar, chips, colagem, tema,
+  animação), 13 de teclado, 13 de unidade da TUI (animação, tema, sidebar,
+  geometria de modal), 38 de core, 5 de modelo, 8 de lógica.
+- Ferramenta de inspeção visual: `cargo run -p dnfm-tui --example snapshot`
+ gera o buffer com cores e `scripts/snapshot_to_html.py` converte em HTML —
+  usado para revisar o layout quadro a quadro durante o desenvolvimento.
+- `clippy -D warnings` e `fmt` limpos.
+
+### Limitações conhecidas
+
+- Sem transparência real: o "dim" do fundo é obtido com sombra deslocada, não
+  com alfa.
+- Fechar um modal leva ~160 ms (bloqueia teclado nesse intervalo); abrir é
+  imediato no primeiro quadro.
+- O hover depende de o terminal reportar movimento do mouse.
+- O resumo do sidebar conta sobre todos os instalados, não sobre o filtro atual.

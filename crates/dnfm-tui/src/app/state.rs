@@ -110,6 +110,22 @@ impl PickerTarget {
     }
 }
 
+/// Um filtro ativo mostrado como chip no cabeçalho; clicar remove.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ChipClear {
+    Text,
+    Category(String),
+    Family(String),
+    Repo,
+    Reason,
+    Arch,
+    Size,
+    Date,
+    Marked,
+    Protected,
+    Updates,
+}
+
 /// Seletor multi-escolha com busca, usado para categoria e família.
 #[derive(Debug, Clone, Default)]
 pub struct Picker {

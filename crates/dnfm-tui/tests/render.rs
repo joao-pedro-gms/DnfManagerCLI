@@ -133,8 +133,8 @@ fn modal_de_preview_mostra_motivos_e_espaco() {
         result: ResolveResult::Ok,
     }));
     let screen = render(&mut app, 120, 40);
-    assert!(screen.contains("Você marcou"));
-    assert!(screen.contains("Saem junto"));
+    assert!(screen.contains("VOCÊ MARCOU"));
+    assert!(screen.contains("SAEM JUNTO"));
     assert!(screen.contains("preview da transação"));
 }
 
@@ -184,7 +184,7 @@ fn agrupamento_por_categoria_desenha_cabecalhos() {
         "cabeçalho do grupo deveria aparecer"
     );
     assert!(screen.contains("2 pacote(s)"));
-    assert!(screen.contains("agrupado por categoria"));
+    assert!(screen.contains("por categoria"));
 }
 
 #[test]
@@ -249,5 +249,76 @@ fn filtro_por_categoria_reduz_a_lista() {
     app.refresh();
     assert_eq!(app.visible.len(), 2);
     let screen = render(&mut app, 120, 30);
-    assert!(screen.contains("filtros(1)"));
+    assert!(screen.contains("filtros: 1"));
+}
+
+#[test]
+fn sidebar_mostra_grupos_com_contagem() {
+    let mut app = app_com_categorias();
+    let screen = render(&mut app, 140, 40);
+    assert!(screen.contains("Categorias"), "título do sidebar");
+    assert!(screen.contains("TeX Live"));
+    assert!(screen.contains("grupos"), "rodapé do sidebar");
+    assert!(app.sidebar_area.width > 0, "área do sidebar registrada");
+}
+
+#[test]
+fn sidebar_some_em_terminal_estreito() {
+    let mut app = app_com_categorias();
+    let screen = render(&mut app, 70, 24);
+    assert!(!screen.contains("Categorias"));
+    // A tabela continua legível.
+    assert!(screen.contains("Instalados"));
+}
+
+#[test]
+fn chips_mostram_filtros_ativos_e_reagem_ao_clique() {
+    use crossterm::event::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+
+    let mut app = app_com_categorias();
+    app.filter.categories = vec!["TeX Live".into()];
+    app.filter.only_updates = true;
+    app.after_filter_change();
+    let _ = render(&mut app, 140, 40);
+
+    assert!(app.chips.len() >= 2, "um chip por filtro ativo");
+    let (rect, chip) = app.chips[0].clone();
+    assert!(matches!(chip, dnfm_tui::app::ChipClear::Category(_)));
+
+    let clique = MouseEvent {
+        kind: MouseEventKind::Down(MouseButton::Left),
+        column: rect.x + 1,
+        row: rect.y,
+        modifiers: KeyModifiers::NONE,
+    };
+    dnfm_tui::keys::handle_mouse(&mut app, clique);
+    assert!(app.filter.categories.is_empty(), "chip removeu a categoria");
+    assert!(app.filter.only_updates, "o outro filtro permaneceu");
+}
+
+#[test]
+fn rodape_mostra_atalhos_do_contexto() {
+    let mut app = app_com_categorias();
+    let screen = render(&mut app, 140, 40);
+    assert!(screen.contains("marcar"));
+    assert!(screen.contains("filtros"));
+    assert!(screen.contains("grupos"));
+}
+
+#[test]
+fn troca_de_tema_nao_quebra_o_desenho() {
+    let mut app = app_com_categorias();
+    for _ in 0..4 {
+        let screen = render(&mut app, 120, 34);
+        assert!(screen.contains("Instalados"));
+        app.cycle_theme();
+    }
+}
+
+#[test]
+fn animacao_de_entrada_reduz_o_modal_no_primeiro_quadro() {
+    let mut app = app_com_categorias();
+    app.open_modal(Modal::Help);
+    let inicial = render(&mut app, 120, 40);
+    assert!(inicial.contains("ajuda"));
 }

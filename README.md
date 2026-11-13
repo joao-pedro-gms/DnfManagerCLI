@@ -9,17 +9,20 @@ precisa de root. As operações de escrita passam pelo polkit, como qualquer
 ferramenta gráfica do sistema.
 
 ```
-┌─ dnfm · 8008 instalados · 48 atualizações · 3 marcados ─────────────────────┐
-│ [Instalados]  Atualizações  Órfãos  Histórico  Repos                        │
+┌ dnfm   8009 pacotes · 48 atualizações · 3 marcados · 30 categorias ─────────┐
+│ Instalados  Atualizações  Órfãos  Histórico  Repos      arch: x86_64 ×      │
+├ Categorias ──────┬ Instalados · 8009 · por categoria ─────────────────────┤
+│ TeX Live    ███ 9 │ ▼ TeX Live                    9 · 39%                 │
+│ KDE Plasma  █   3 │ ▢ texlive-a2ping   svn15878  @System  484 KiB  TeX Live│
+│ Outros      █   3 │ ▢ texlive-ae       svn15878  @System  484 KiB  TeX Live│
+│ total       23    │ ▼ KDE Plasma                  3 · 13%                 │
+│ marcados     2    │ ▢ kf6-kcoreaddons  6.8.0-1   @System  2.1 MiB KDE…     │
+├ detalhes ────────┴─────────────────────────────────────────────────────────┤
+│ texlive-a2ping  12:svn15878-5.fc45 · x86_64                                │
+│ enter: descrição, licença e URL                                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  [ ]  nome               versão              repo    tamanho  instalado     │
-│  [x]  dosbox-staging     0.82.2-6.fc45       fedora  16 MiB   03/10         │
-│  [!]  glibc              2.42-3.fc45         fedora  12 MiB   03/10         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ dosbox-staging — DOSBox Staging is a modern continuation of DOSBox…         │
-│ licença: GPL-2.0-or-later   https://www.dosbox-staging.org                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ espaço marca · p preview · / busca · s ordena · tab abas · ? ajuda · q sai  │
+│ ● 3 marcados · pronto   ordenar: nome · grupo: categoria · filtros: 1      │
+│ ␣ marcar  t categoria  f filtros  o agrupar  [ ] grupos  p preview  ? ajuda │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -68,6 +71,10 @@ dnfm list --arch noarch --min-size 10M --group-by family
 | `!` / `A` | seleciona atualizações de segurança / todas |
 | `/` | busca fuzzy por nome e resumo |
 | `o` / `O` | cicla o agrupamento (categoria, família, repo, motivo) |
+| `[` / `]` | percorre os grupos do sidebar aplicando o filtro |
+| `0` | limpa o filtro do grupo atual |
+| `ctrl+b` | mostra/oculta o sidebar |
+| `F2` | troca a paleta (midnight, solar, mono) |
 | `f` | painel de filtros (texto, categoria, repo, motivo, arch, tamanho, data) |
 | `c` / `C` | filtra por categoria / família (seletor com busca) |
 | `t` / `T` | dá ou remove uma categoria própria |
@@ -79,6 +86,31 @@ dnfm list --arch noarch --min-size 10M --group-by family
 Mouse: clique seleciona, clique na caixa marca, roda rola, clique no cabeçalho
 ordena, clique na aba troca de aba.
 
+
+
+## Interface
+
+O layout tem quatro zonas fixas: cabeçalho (marca, contadores, abas e **chips de
+filtro clicáveis**), sidebar de grupos, tabela agrupada e painel de detalhes,
+com uma keybar contextual no rodapé.
+
+- **Sidebar** — mostra todos os grupos da dimensão atual com contagem e barra
+  proporcional, além de um resumo (total, marcados, maior grupo, filtros
+  ativos). Clicar num grupo filtra; `[`/`]` percorrem os grupos aplicando o
+  filtro na hora; `0` limpa. Some sozinho em terminais com menos de 92 colunas.
+- **Chips** — cada filtro ativo vira um chip no cabeçalho; clicar remove só
+  aquele filtro, sem abrir o painel.
+- **Agrupamento** — cabeçalhos de grupo com contagem, percentual e barra;
+  `espaço` recolhe, `a` marca o grupo inteiro.
+- **Animações** — abertura de modal com escala e sombra, barras do sidebar
+  crescendo na carga, pulso no grupo que mudou e spinner durante `resolve`.
+  O laço redesenha a 60 fps somente enquanto há animação; parado, cai para 5 fps.
+- **Tema** — três paletas com a mesma hierarquia (destaque, texto, dim,
+  superfícies, estados). `F2` cicla e a escolha fica em
+  `~/.local/state/dnfm/ui.json`.
+- **Mouse** — hover realça a linha, clique seleciona, clique na caixa marca,
+  clique no cabeçalho ordena, clique na aba troca de aba, clique no chip remove
+  o filtro e clique no sidebar filtra pelo grupo.
 
 ## Categorias, agrupamento e filtros
 

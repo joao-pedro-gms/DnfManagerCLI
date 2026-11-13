@@ -16,6 +16,11 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
         return vec![Cmd::Quit];
     }
 
+    // Enquanto o modal fecha, o teclado fica bloqueado.
+    if app.anim.closing {
+        return Vec::new();
+    }
+
     // Modais capturam o teclado.
     if let Some(modal) = &app.modal {
         match modal {
@@ -24,7 +29,7 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
                     key.code,
                     KeyCode::Esc | KeyCode::Enter | KeyCode::Char('q') | KeyCode::Char('?')
                 ) {
-                    app.modal = None;
+                    app.close_modal();
                 }
                 return Vec::new();
             }
@@ -128,7 +133,8 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
         KeyCode::Esc => {
             app.filter.clear();
             app.collapsed.clear();
-            app.refresh();
+            app.after_filter_change();
+            app.status = "filtros limpos".to_string();
             Vec::new()
         }
         KeyCode::Tab => {
@@ -159,6 +165,26 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
         }
         KeyCode::Home | KeyCode::Char('g') => {
             app.select(0);
+            Vec::new()
+        }
+        KeyCode::F(2) => {
+            app.cycle_theme();
+            Vec::new()
+        }
+        KeyCode::Char('b') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+            app.toggle_sidebar();
+            Vec::new()
+        }
+        KeyCode::Char('[') => {
+            app.sidebar_scrub(-1);
+            Vec::new()
+        }
+        KeyCode::Char(']') => {
+            app.sidebar_scrub(1);
+            Vec::new()
+        }
+        KeyCode::Char('0') => {
+            app.sidebar_clear();
             Vec::new()
         }
         KeyCode::Char('o') => {
@@ -275,53 +301,98 @@ pub fn handle_key(app: &mut App, key: KeyEvent) -> Vec<Cmd> {
             _ => vec![Cmd::LoadAll],
         },
         KeyCode::Char('?') | KeyCode::Char('h') => {
-            app.modal = Some(Modal::Help);
+            app.open_modal(Modal::Help);
             Vec::new()
         }
         _ => Vec::new(),
     }
 }
 
-/// Mouse -> comandos. Clique na coluna da caixa marca; cabeçalho recolhe grupo.
+/// Mouse -> comandos. Hover realça, clique em chip remove o filtro, clique no
+/// sidebar filtra pelo grupo, clique no cabeçalho ordena.
 pub fn handle_mouse(app: &mut App, mouse: MouseEvent) -> Vec<Cmd> {
+    fn hit(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
+        rect.width > 0
+            && rect.height > 0
+            && x >= rect.x
+            && x < rect.x + rect.width
+            && y >= rect.y
+            && y < rect.y + rect.height
+    }
+
+    let (x, y) = (mouse.column, mouse.row);
     let area = app.table_area;
-    let inside = mouse.column >= area.x
-        && mouse.column < area.x + area.width
-        && mouse.row >= area.y
-        && mouse.row < area.y + area.height;
+    let inside_table = hit(area, x, y);
 
     match mouse.kind {
+        MouseEventKind::Moved => {
+            app.hover = if inside_table {
+                let header_y = area.y + 1;
+                if y > header_y {
+                    let row = (y - header_y - 1) as usize + app.scroll;
+                    (row < app.rows_len()).then_some(row)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+        }
         MouseEventKind::ScrollDown => {
-            app.move_selection(3);
+            if hit(app.sidebar_area, x, y) {
+                app.sidebar_move(1);
+            } else {
+                app.move_selection(3);
+            }
         }
         MouseEventKind::ScrollUp => {
-            app.move_selection(-3);
+            if hit(app.sidebar_area, x, y) {
+                app.sidebar_move(-1);
+            } else {
+                app.move_selection(-3);
+            }
         }
         MouseEventKind::Down(MouseButton::Left) => {
-            // Aba: primeira linha do cabeçalho.
-            if mouse.row <= 2 {
-                let offset = (mouse.column as usize).saturating_sub(area.x as usize + 2);
-                let idx = offset / 18;
-                if let Some(tab) = Tab::ALL.get(idx) {
+            // Chips de filtro no cabeçalho.
+            if let Some((_, chip)) = app.chips.iter().find(|(rect, _)| hit(*rect, x, y)).cloned() {
+                app.clear_chip(&chip);
+                return Vec::new();
+            }
+
+            // Sidebar: seleciona e filtra pelo grupo.
+            if app.sidebar.visible && hit(app.sidebar_area, x, y) {
+                let row = (y - app.sidebar_area.y) as usize + app.sidebar_scroll;
+                if row < app.sidebar.buckets.len() {
+                    app.sidebar.cursor = row;
+                    app.sidebar_toggle();
+                }
+                return Vec::new();
+            }
+
+            // Abas (primeira linha do cabeçalho).
+            if y <= 2 {
+                let offset = (x as usize).saturating_sub(area.x as usize + 2);
+                if let Some(tab) = Tab::ALL.get(offset / 18) {
                     app.switch_tab(*tab);
                 }
                 return Vec::new();
             }
-            if !inside {
+            if !inside_table {
                 return Vec::new();
             }
             let header_y = area.y + 1;
-            if mouse.row == header_y {
-                app.sort = match (mouse.column - area.x) / 18 {
+            if y == header_y {
+                app.sort = match (x - area.x) / 18 {
                     1 => dnfm_core::SortKey::Name,
                     2 => dnfm_core::SortKey::Size,
                     3 => dnfm_core::SortKey::Repo,
+                    4 => dnfm_core::SortKey::Category,
                     _ => app.sort.next(),
                 };
                 app.refresh();
                 return Vec::new();
             }
-            let row = (mouse.row - header_y - 1) as usize + app.scroll;
+            let row = (y - header_y - 1) as usize + app.scroll;
             if row >= app.rows_len() {
                 return Vec::new();
             }
@@ -332,8 +403,7 @@ pub fn handle_mouse(app: &mut App, mouse: MouseEvent) -> Vec<Cmd> {
                 }
             }
             app.select(row);
-            // Clique na coluna da caixa alterna a marcação.
-            if app.tab.marks_packages() && mouse.column < area.x + 4 {
+            if app.tab.marks_packages() && x < area.x + 4 {
                 app.toggle_mark_current();
             }
         }

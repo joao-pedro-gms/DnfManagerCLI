@@ -2,9 +2,11 @@
 //! efeitos são devolvidos como [`Cmd`] para o laço de eventos executar.
 
 mod filters;
+mod sidebar;
 mod state;
 mod types;
 
+pub use sidebar::{Bucket, Sidebar};
 pub use state::*;
 pub use types::*;
 
@@ -17,6 +19,9 @@ use dnfm_core::{
 };
 use ratatui::layout::Rect;
 use ratatui::widgets::TableState;
+
+use crate::anim::Animator;
+use crate::theme::{Theme, UiSettings};
 
 pub struct App {
     pub tab: Tab,
@@ -61,6 +66,19 @@ pub struct App {
     pub history_loading: bool,
     pub pending_specs: Vec<String>,
     pub last_refresh: Option<std::time::Instant>,
+    pub anim: Animator,
+    pub theme: Theme,
+    pub ui: UiSettings,
+    pub sidebar: Sidebar,
+    /// Linha sob o mouse, para realce de hover.
+    pub hover: Option<usize>,
+    /// Área e rolagem do sidebar, preenchidas no desenho para hit-testing.
+    pub sidebar_area: Rect,
+    pub sidebar_scroll: usize,
+    /// Chips de filtro desenhados, com a área para clique.
+    pub chips: Vec<(Rect, ChipClear)>,
+    /// Áreas das abas, para clique preciso.
+    pub tab_hits: Vec<(Rect, Tab)>,
 }
 
 impl Default for App {
@@ -105,6 +123,15 @@ impl Default for App {
             history_loading: false,
             pending_specs: Vec::new(),
             last_refresh: None,
+            anim: Animator::default(),
+            theme: Theme::default(),
+            ui: UiSettings::default(),
+            sidebar: Sidebar::default(),
+            hover: None,
+            sidebar_area: Rect::default(),
+            sidebar_scroll: 0,
+            chips: Vec::new(),
+            tab_hits: Vec::new(),
         }
     }
 }
@@ -194,6 +221,7 @@ impl App {
         }
 
         self.ensure_package_selection();
+        self.rebuild_sidebar();
         self.last_refresh = Some(std::time::Instant::now());
     }
 
@@ -451,6 +479,7 @@ impl App {
                 self.loading = false;
                 self.taxonomy = Taxonomy::build(&self.installed, &self.custom_categories);
                 self.refresh();
+                self.anim.start_bars();
                 self.status = format!(
                     "{} instalados · {} categorias · {} marcados",
                     self.installed.len(),
@@ -504,7 +533,7 @@ impl App {
                         dnfm_core::format_size(preview.freed_bytes())
                     );
                 }
-                self.modal = Some(Modal::Preview(*preview));
+                self.open_modal(Modal::Preview(*preview));
                 None
             }
             AppEvent::Executed(outcome) => {
@@ -516,11 +545,11 @@ impl App {
                     }
                     let _ = self.marks.save();
                     self.status = "transação concluída".to_string();
-                    self.modal = None;
+                    self.close_modal();
                     return Some(Cmd::LoadAll);
                 }
                 self.status = "a transação falhou".to_string();
-                self.modal = Some(Modal::Error("a transação não foi concluída".to_string()));
+                self.open_modal(Modal::Error("a transação não foi concluída".to_string()));
                 None
             }
             AppEvent::Progress(event) => {
@@ -533,7 +562,7 @@ impl App {
                     self.progress.success = Some(false);
                 }
                 self.status = message.clone();
-                self.modal = Some(Modal::Error(message));
+                self.open_modal(Modal::Error(message));
                 None
             }
         }
@@ -556,7 +585,7 @@ impl App {
                     total,
                     ..Default::default()
                 };
-                self.modal = Some(Modal::Progress);
+                self.open_modal(Modal::Progress);
             }
             ProgressEvent::Download {
                 description,
@@ -602,26 +631,100 @@ impl App {
         };
         match preview.clone().confirm() {
             Ok(token) => {
-                self.modal = Some(Modal::Progress);
+                self.open_modal(Modal::Progress);
                 self.progress = Progress::default();
                 self.status = "executando transação…".to_string();
                 Some(Cmd::Execute(token))
             }
             Err(err) => {
-                self.modal = Some(Modal::Error(err.to_string()));
+                self.open_modal(Modal::Error(err.to_string()));
                 None
             }
         }
     }
 
+    /// Abre um modal com a animação de entrada (sem reiniciar se já aberto).
+    pub fn open_modal(&mut self, modal: Modal) {
+        let already_open = self.modal.is_some() && !self.anim.closing;
+        self.modal = Some(modal);
+        if !already_open {
+            self.anim.open_modal();
+            self.anim.pulse();
+        }
+    }
+
+    /// Fecha com transição; o modal só desaparece quando a animação termina.
+    pub fn close_modal(&mut self) {
+        if self.modal.is_some() && !self.anim.closing {
+            self.anim.close_modal();
+            self.anim.pulse();
+        }
+    }
+
     pub fn cancel_modal(&mut self) -> Option<Cmd> {
         let had_preview = matches!(self.modal, Some(Modal::Preview(_)));
-        self.modal = None;
+        self.close_modal();
         if had_preview {
             self.status = "preview descartado".to_string();
             return Some(Cmd::CancelPreview);
         }
         None
+    }
+
+    /// Avança a animação; devolve `true` se a tela precisa ser redesenhada.
+    pub fn on_tick(&mut self) -> bool {
+        let animating = self.anim.tick();
+        if self.anim.closing && self.anim.modal <= 0.0 {
+            self.modal = None;
+            self.anim.closing = false;
+        }
+        animating
+    }
+
+    /// Leva as animações ao fim (usado nos testes e ao trocar de tela).
+    pub fn settle(&mut self) {
+        for _ in 0..60 {
+            self.anim.advance(0.05);
+            if !self.anim.is_animating() {
+                break;
+            }
+        }
+        if self.anim.closing && self.anim.modal <= 0.0 {
+            self.modal = None;
+            self.anim.closing = false;
+        }
+    }
+
+    /// Remove um filtro específico (clique no chip correspondente).
+    pub fn clear_chip(&mut self, chip: &ChipClear) {
+        match chip {
+            ChipClear::Text => self.filter.text.clear(),
+            ChipClear::Category(label) => self.filter.categories.retain(|c| c != label),
+            ChipClear::Family(label) => self.filter.families.retain(|f| f != label),
+            ChipClear::Repo => self.filter.repo = None,
+            ChipClear::Reason => self.filter.reason = None,
+            ChipClear::Arch => self.filter.arch = None,
+            ChipClear::Size => self.filter.apply_size_preset(dnfm_core::SizePreset::Any),
+            ChipClear::Date => self.filter.apply_date_preset(dnfm_core::DatePreset::Any, 0),
+            ChipClear::Marked => self.filter.marked_only = false,
+            ChipClear::Protected => self.filter.protected = None,
+            ChipClear::Updates => self.filter.only_updates = false,
+        }
+        self.after_filter_change();
+        self.status = "filtro removido".to_string();
+        self.anim.pulse();
+    }
+
+    pub fn cycle_theme(&mut self) {
+        self.theme = self.theme.next();
+        self.ui.dirty = true;
+        self.anim.pulse();
+        self.status = format!("tema {}", self.theme.name);
+    }
+
+    /// Um pulso de destaque (usado quando o conteúdo muda).
+    pub fn flash(&mut self) {
+        self.anim.pulse();
     }
 
     /// Nome curto para a barra inferior: `nome-versão` sem arch/epoch.

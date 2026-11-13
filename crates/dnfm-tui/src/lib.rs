@@ -1,12 +1,13 @@
 //! TUI do dnfm: laço de eventos, terminal e execução dos comandos.
 
+pub mod anim;
 pub mod app;
 pub mod keys;
+pub mod theme;
 pub mod ui;
 
 use std::io;
 use std::sync::Arc;
-use std::time::Duration;
 
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::event::{Event, EventStream, KeyEventKind};
@@ -42,13 +43,15 @@ fn init_terminal() -> anyhow::Result<Terminal<CrosstermBackend<io::Stdout>>> {
 
 /// Roda a interface até o usuário sair.
 pub async fn run(backend: Arc<dyn DnfBackend>) -> anyhow::Result<App> {
+    let (ui, theme) = crate::theme::UiSettings::load();
     let mut app = App::new(MarkSet::load_default(), CustomCategories::load_default());
+    app.theme = theme;
+    app.ui = ui;
     let mut terminal = init_terminal()?;
     let _guard = TerminalGuard;
 
     let (tx, mut rx) = mpsc::unbounded_channel::<AppEvent>();
     let mut events = EventStream::new();
-    let mut ticker = tokio::time::interval(Duration::from_millis(250));
 
     spawn_cmd(&tx, &backend, Cmd::LoadAll);
 
@@ -82,19 +85,9 @@ pub async fn run(backend: Arc<dyn DnfBackend>) -> anyhow::Result<App> {
                 }
                 lazy_load(&mut app, &tx, &backend);
             }
-            _ = ticker.tick() => {
-                if app.marks.is_dirty() {
-                    if let Err(err) = app.marks.save() {
-                        tracing::warn!(%err, "não consegui gravar as marcações");
-                        app.status = format!("erro ao gravar marcações: {err}");
-                    }
-                }
-                if app.custom_categories.is_dirty() {
-                    if let Err(err) = app.custom_categories.save() {
-                        tracing::warn!(%err, "não consegui gravar as categorias");
-                        app.status = format!("erro ao gravar categorias: {err}");
-                    }
-                }
+            _ = tokio::time::sleep(app.anim.frame_time()) => {
+                app.on_tick();
+                persist(&mut app);
             }
         }
 
@@ -108,7 +101,27 @@ pub async fn run(backend: Arc<dyn DnfBackend>) -> anyhow::Result<App> {
     // Última gravação antes de sair.
     let _ = app.marks.save();
     let _ = app.custom_categories.save();
+    let _ = app.ui.save(&app.theme);
     Ok(app)
+}
+
+/// Grava o que mudou (marcações, categorias, tema).
+fn persist(app: &mut App) {
+    if app.marks.is_dirty() {
+        if let Err(err) = app.marks.save() {
+            tracing::warn!(%err, "não consegui gravar as marcações");
+            app.status = format!("erro ao gravar marcações: {err}");
+        }
+    }
+    if app.custom_categories.is_dirty() {
+        if let Err(err) = app.custom_categories.save() {
+            tracing::warn!(%err, "não consegui gravar as categorias");
+            app.status = format!("erro ao gravar categorias: {err}");
+        }
+    }
+    if app.ui.dirty {
+        let _ = app.ui.save(&app.theme);
+    }
 }
 
 /// Carrega dados da aba apenas na primeira visita.

@@ -81,6 +81,9 @@ fn ajuda_abre_e_fecha() {
     handle_key(&mut app, key(KeyCode::Char('?')));
     assert!(matches!(app.modal, Some(Modal::Help)));
     handle_key(&mut app, key(KeyCode::Esc));
+    // O fechamento é animado: só some quando a transição termina.
+    assert!(app.anim.closing);
+    app.settle();
     assert!(app.modal.is_none());
 }
 
@@ -156,4 +159,72 @@ fn espaco_em_cabecalho_recolhe_o_grupo() {
     handle_key(&mut app, key(KeyCode::Char(' ')));
     assert_eq!(app.collapsed.len(), 1);
     assert_eq!(app.marks.len(), 0);
+}
+
+#[test]
+fn abrir_modal_dispara_animacao_de_entrada() {
+    let mut app = app();
+    handle_key(&mut app, key(KeyCode::Char('?')));
+    assert_eq!(app.anim.modal, 0.0, "começa fechado e cresce");
+    app.anim.advance(0.05);
+    assert!(app.anim.modal > 0.0 && app.anim.modal < 1.0);
+    app.anim.advance(0.2);
+    assert_eq!(app.anim.modal, 1.0);
+}
+
+#[test]
+fn colchetes_percorrem_grupos_aplicando_filtro() {
+    let mut app = app();
+    app.installed = (0..6)
+        .map(|i| Package {
+            name: if i < 4 {
+                format!("texlive-{i}")
+            } else {
+                format!("vlc-{i}")
+            },
+            ..app.installed[0].clone()
+        })
+        .collect();
+    app.rebuild_taxonomy();
+    assert!(app.sidebar.buckets.len() >= 2);
+
+    handle_key(&mut app, key(KeyCode::Char(']')));
+    assert_eq!(app.filter.categories.len(), 1, "deve filtrar por um grupo");
+    assert!(app.visible.len() < app.installed.len());
+
+    handle_key(&mut app, key(KeyCode::Char('0')));
+    assert!(app.filter.categories.is_empty());
+    assert_eq!(app.visible.len(), app.installed.len());
+}
+
+#[test]
+fn f2_troca_a_paleta() {
+    let mut app = app();
+    let antes = app.theme.palette;
+    handle_key(&mut app, key(KeyCode::F(2)));
+    assert_ne!(antes, app.theme.palette);
+    assert!(app.ui.dirty);
+    assert!(app.status.contains("tema"));
+}
+
+#[test]
+fn ctrl_b_alterna_o_sidebar() {
+    let mut app = app();
+    let antes = app.sidebar.visible;
+    handle_key(
+        &mut app,
+        KeyEvent::new(KeyCode::Char('b'), KeyModifiers::CONTROL),
+    );
+    assert_ne!(antes, app.sidebar.visible);
+}
+
+#[test]
+fn chip_remove_apenas_o_filtro_clicado() {
+    let mut app = app();
+    app.filter.categories = vec!["Multimídia".into()];
+    app.filter.only_updates = true;
+    app.after_filter_change();
+    app.clear_chip(&dnfm_tui::app::ChipClear::Category("Multimídia".into()));
+    assert!(app.filter.categories.is_empty());
+    assert!(app.filter.only_updates, "o outro filtro permanece");
 }

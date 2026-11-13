@@ -1,101 +1,104 @@
-//! Desenho da interface. Só lê o estado; nenhuma decisão vive aqui.
+//! Desenho da interface: layout, tabela, detalhes e rodapé.
+//!
+//! Só lê o estado; nenhuma decisão vive aqui. O tema e o animador vêm do `App`,
+//! então a mesma função desenha qualquer paleta em qualquer quadro.
 
 use dnfm_core::{format_date, format_size, Reason};
-use ratatui::layout::{Alignment, Constraint, Layout, Rect};
-use ratatui::style::{Color, Modifier, Style};
+use ratatui::layout::{Constraint, Layout, Rect};
+use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Cell, Paragraph, Row, Table, TableState, Tabs, Wrap};
+use ratatui::widgets::{Block, BorderType, Cell, Paragraph, Row, Table, TableState, Wrap};
 use ratatui::Frame;
 
-use crate::app::{App, Modal, RowRef, Tab};
+use crate::app::{App, ChipClear, Modal, RowRef, Tab};
+use crate::theme::Theme;
 
+mod header;
 mod modals;
-
-pub(crate) const HINT: &str =
-    "␣ marca · t categoria · f filtros · o agrupa · p preview · / busca · s ordena · ? ajuda · q sai";
+mod sidebar;
 
 pub fn draw(frame: &mut Frame, app: &mut App) {
-    let [header, body, details, footer] = Layout::vertical([
-        Constraint::Length(3),
-        Constraint::Min(6),
-        Constraint::Length(7),
+    let area = frame.area();
+    let [topo, corpo, detalhes, rodape] = Layout::vertical([
+        Constraint::Length(4),
+        Constraint::Min(8),
+        Constraint::Length(5),
         Constraint::Length(2),
     ])
-    .areas(frame.area());
+    .areas(area);
 
-    draw_header(frame, app, header);
-    draw_table(frame, app, body);
-    draw_details(frame, app, details);
-    draw_footer(frame, app, footer);
+    header::draw(frame, app, topo);
 
-    // Sobreposições, da mais específica para a mais genérica.
+    // O sidebar só faz sentido na aba de instalados e com largura suficiente.
+    let com_sidebar = app.sidebar.visible && app.tab == Tab::Installed && area.width >= 92;
+    if com_sidebar {
+        let [lado, resto] =
+            Layout::horizontal([Constraint::Length(32), Constraint::Min(40)]).areas(corpo);
+        sidebar::draw(frame, app, lado);
+        draw_table(frame, app, resto);
+    } else {
+        app.sidebar_area = Rect::default();
+        draw_table(frame, app, corpo);
+    }
+
+    draw_details(frame, app, detalhes);
+    draw_footer(frame, app, rodape);
+
+    // Sobreposições: campo de categoria, seletor/painel de filtros, modal.
     if app.assign_input.is_some() {
-        modals::draw_assign(frame, app, frame.area());
+        modals::draw_assign(frame, app, area);
     }
     if let Some(picker) = app.picker.clone() {
-        modals::draw_picker(frame, app, frame.area(), &picker);
+        modals::draw_picker(frame, app, area, &picker);
     } else if app.filter_panel.is_some() {
-        modals::draw_filter_panel(frame, app, frame.area());
+        modals::draw_filter_panel(frame, app, area);
     }
     if let Some(modal) = app.modal.clone() {
+        let rect = modals::modal_rect(frame.area(), modal_geometry(&modal), app.anim.modal_eased());
         match modal {
-            Modal::Help => modals::draw_help(frame, frame.area()),
-            Modal::Error(message) => modals::draw_error(frame, frame.area(), &message),
+            Modal::Help => modals::draw_help(frame, app, rect),
+            Modal::Error(message) => modals::draw_error(frame, app, rect, &message),
             Modal::Preview(preview) => {
-                modals::draw_preview(frame, frame.area(), &preview, &app.pending_specs)
+                modals::draw_preview(frame, app, rect, &preview, &app.pending_specs)
             }
-            Modal::Progress => modals::draw_progress(frame, app, frame.area()),
+            Modal::Progress => modals::draw_progress(frame, app, rect),
         }
     }
 }
 
-fn draw_header(frame: &mut Frame, app: &App, area: Rect) {
-    let marked = app.marks.len();
-    let active = app.filter.active_count();
-    let filtro = if active > 0 {
-        format!(" · {active} filtro(s)")
-    } else {
-        String::new()
-    };
-    let title = format!(
-        " dnfm · {} instalados · {} atualizações · {} marcados · {} categorias{filtro} ",
-        app.installed.len(),
-        app.upgrades.len(),
-        marked,
-        app.taxonomy.category_count()
-    );
-    let titles: Vec<Line> = Tab::ALL
-        .iter()
-        .map(|t| Line::from(t.title().to_string()))
-        .collect();
-    let tabs = Tabs::new(titles)
-        .select(app.tab.index())
-        .highlight_style(
-            Style::default()
-                .fg(Color::Black)
-                .bg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        )
-        .divider(" ")
-        .block(
-            Block::bordered()
-                .title(title)
-                .title_alignment(Alignment::Left)
-                .border_style(Style::default().fg(Color::DarkGray)),
-        );
-    frame.render_widget(tabs, area);
+/// Proporção (largura, altura) de cada modal.
+fn modal_geometry(modal: &Modal) -> (u16, u16) {
+    match modal {
+        Modal::Help => (66, 22),
+        Modal::Error(_) => (60, 10),
+        Modal::Preview(_) => (76, 30),
+        Modal::Progress => (62, 12),
+    }
 }
 
 fn draw_table(frame: &mut Frame, app: &mut App, area: Rect) {
-    let title = match app.tab {
-        Tab::Installed if app.group != dnfm_core::categories::GroupMode::None => {
-            format!(" {} · agrupado por {} ", app.tab.title(), app.group.label())
+    let theme = app.theme.clone();
+    let filtrados = app.visible.len();
+    let total = app.installed.len();
+    let titulo = match app.tab {
+        Tab::Installed => {
+            let agrup = if app.group != dnfm_core::categories::GroupMode::None {
+                format!(" · por {}", app.group.label())
+            } else {
+                String::new()
+            };
+            if filtrados == total {
+                format!(" {} · {total}{agrup} ", app.tab.title())
+            } else {
+                format!(" {} · {filtrados} de {total}{agrup} ", app.tab.title())
+            }
         }
         _ => format!(" {} ", app.tab.title()),
     };
     let block = Block::bordered()
-        .title(title)
-        .border_style(Style::default().fg(Color::DarkGray));
+        .title(Span::styled(titulo, Style::default().fg(theme.text)))
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border());
     let inner = block.inner(area);
     frame.render_widget(block, area);
 
@@ -103,9 +106,11 @@ fn draw_table(frame: &mut Frame, app: &mut App, area: Rect) {
     app.viewport = inner.height.saturating_sub(1) as usize;
     app.follow_selection();
 
-    let (header, widths) = table_layout(app.tab);
+    let (headers, widths) = table_layout(app.tab);
     let end = (app.scroll + app.viewport).min(app.rows_len());
-    let rows: Vec<Row> = (app.scroll..end).map(|idx| build_row(app, idx)).collect();
+    let rows: Vec<Row> = (app.scroll..end)
+        .map(|idx| build_row(app, idx, &theme))
+        .collect();
 
     let mut state = TableState::default();
     let selected = app.selected_index().saturating_sub(app.scroll);
@@ -115,17 +120,13 @@ fn draw_table(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let table = Table::new(rows, widths)
         .header(
-            Row::new(header).style(
+            Row::new(headers).style(
                 Style::default()
-                    .fg(Color::Cyan)
+                    .fg(theme.accent)
                     .add_modifier(Modifier::BOLD),
             ),
         )
-        .row_highlight_style(
-            Style::default()
-                .bg(Color::Indexed(236))
-                .add_modifier(Modifier::BOLD),
-        )
+        .row_highlight_style(theme.row_highlight())
         .highlight_symbol("▸ ");
     frame.render_stateful_widget(table, inner, &mut state);
 }
@@ -138,20 +139,20 @@ fn table_layout(tab: Tab) -> (Vec<&'static str>, Vec<Constraint>) {
                 "nome",
                 "versão",
                 "repo",
-                "tamanho",
+                "  tamanho",
                 "instalado",
                 "categoria",
                 "motivo",
             ],
             vec![
-                Constraint::Length(4),
-                Constraint::Length(30),
-                Constraint::Length(22),
-                Constraint::Length(11),
+                Constraint::Length(3),
+                Constraint::Length(26),
+                Constraint::Length(20),
+                Constraint::Length(9),
+                Constraint::Length(9),
                 Constraint::Length(10),
-                Constraint::Length(11),
-                Constraint::Length(18),
-                Constraint::Min(9),
+                Constraint::Length(16),
+                Constraint::Min(11),
             ],
         ),
         Tab::Updates => (
@@ -165,10 +166,10 @@ fn table_layout(tab: Tab) -> (Vec<&'static str>, Vec<Constraint>) {
             ],
             vec![
                 Constraint::Length(4),
-                Constraint::Length(30),
-                Constraint::Length(20),
-                Constraint::Length(20),
-                Constraint::Length(12),
+                Constraint::Length(28),
+                Constraint::Length(19),
+                Constraint::Length(19),
+                Constraint::Length(11),
                 Constraint::Min(12),
             ],
         ),
@@ -176,24 +177,34 @@ fn table_layout(tab: Tab) -> (Vec<&'static str>, Vec<Constraint>) {
             vec!["id", "data", "status", "mudanças", "comando"],
             vec![
                 Constraint::Length(6),
-                Constraint::Length(12),
-                Constraint::Length(10),
-                Constraint::Length(10),
+                Constraint::Length(11),
+                Constraint::Length(9),
+                Constraint::Length(9),
                 Constraint::Min(20),
             ],
         ),
         Tab::Repos => (
             vec!["id", "nome", "estado"],
             vec![
-                Constraint::Length(40),
-                Constraint::Min(20),
-                Constraint::Length(10),
+                Constraint::Length(38),
+                Constraint::Min(18),
+                Constraint::Length(9),
             ],
         ),
     }
 }
 
-fn build_row(app: &App, idx: usize) -> Row<'static> {
+fn build_row(app: &App, idx: usize, theme: &Theme) -> Row<'static> {
+    let zebra = Style::default().bg(theme.surface);
+    let hover = Style::default().bg(theme.surface_alt);
+    let fundo = if app.hover == Some(idx) {
+        hover
+    } else if idx % 2 == 1 {
+        zebra
+    } else {
+        Style::default()
+    };
+
     match app.tab {
         Tab::Installed => match app.rows.get(idx) {
             Some(RowRef::Header {
@@ -201,30 +212,49 @@ fn build_row(app: &App, idx: usize) -> Row<'static> {
                 count,
                 collapsed,
             }) => {
-                let marker = if *collapsed { "▶" } else { "▼" };
+                let pct = if app.visible.is_empty() {
+                    0
+                } else {
+                    *count * 100 / app.visible.len().max(1)
+                };
+                let barra_largura = 12usize;
+                let preenchido = ((*count as f32 / app.visible.len().max(1) as f32)
+                    * barra_largura as f32)
+                    .round() as usize;
+                let barra = format!(
+                    "{}{}",
+                    "█".repeat(preenchido.min(barra_largura)),
+                    "·".repeat(barra_largura.saturating_sub(preenchido))
+                );
                 let mut cells = vec![
-                    Cell::from(marker).style(Style::default().fg(Color::Cyan)),
+                    Cell::from(if *collapsed { "▶" } else { "▼" })
+                        .style(Style::default().fg(theme.accent)),
                     Cell::from(label.clone()).style(
                         Style::default()
-                            .fg(Color::Cyan)
+                            .fg(theme.pulsed(app.anim.pulse_level()))
                             .add_modifier(Modifier::BOLD),
                     ),
-                    Cell::from(format!("{count} pacote(s)"))
-                        .style(Style::default().fg(Color::DarkGray)),
+                    Cell::from(format!("{count} · {pct}%")).style(Style::default().fg(theme.dim)),
+                    Cell::from("").style(zebra),
+                    Cell::from("").style(zebra),
+                    Cell::from("").style(zebra),
+                    Cell::from(barra).style(Style::default().fg(theme.accent)),
+                    Cell::from(if *collapsed { "recolhido" } else { "" })
+                        .style(Style::default().fg(theme.dim)),
                 ];
                 while cells.len() < 8 {
                     cells.push(Cell::from(""));
                 }
-                Row::new(cells)
+                Row::new(cells).style(Style::default().bg(theme.surface_alt))
             }
             Some(RowRef::Package { index }) => match app.installed.get(*index) {
-                Some(pkg) => package_row(app, pkg),
+                Some(pkg) => package_row(app, pkg, theme).style(fundo),
                 None => Row::new(Vec::<Cell>::new()),
             },
             None => Row::new(Vec::<Cell>::new()),
         },
         Tab::Orphans => match app.orphans.get(idx) {
-            Some(pkg) => package_row(app, pkg),
+            Some(pkg) => package_row(app, pkg, theme).style(fundo),
             None => Row::new(Vec::<Cell>::new()),
         },
         Tab::Updates => match app.upgrades.get(idx) {
@@ -234,39 +264,41 @@ fn build_row(app: &App, idx: usize) -> Row<'static> {
                 } else {
                     "[ ]"
                 };
-                let severity_style = match up.severity {
-                    dnfm_core::Severity::Critical => {
-                        Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)
-                    }
-                    dnfm_core::Severity::Important => Style::default().fg(Color::LightRed),
-                    dnfm_core::Severity::Moderate => Style::default().fg(Color::Yellow),
-                    dnfm_core::Severity::Low => Style::default().fg(Color::Blue),
-                    dnfm_core::Severity::Unknown => Style::default().fg(Color::DarkGray),
+                let sev = match up.severity {
+                    dnfm_core::Severity::Critical => Style::default()
+                        .fg(theme.danger)
+                        .add_modifier(Modifier::BOLD),
+                    dnfm_core::Severity::Important => Style::default().fg(theme.danger),
+                    dnfm_core::Severity::Moderate => Style::default().fg(theme.warn),
+                    dnfm_core::Severity::Low => Style::default().fg(theme.accent),
+                    dnfm_core::Severity::Unknown => Style::default().fg(theme.dim),
                 };
                 Row::new(vec![
-                    Cell::from(checked),
-                    Cell::from(up.installed.name.clone()),
-                    Cell::from(up.installed.evr.clone())
-                        .style(Style::default().fg(Color::DarkGray)),
-                    Cell::from(up.candidate.evr.clone()).style(Style::default().fg(Color::Green)),
-                    Cell::from(up.severity.label()).style(severity_style),
-                    Cell::from(up.advisory.clone().unwrap_or_else(|| "—".into())),
+                    Cell::from(checked).style(Style::default().fg(theme.mark)),
+                    Cell::from(up.installed.name.clone()).style(Style::default().fg(theme.text)),
+                    Cell::from(up.installed.evr.clone()).style(Style::default().fg(theme.dim)),
+                    Cell::from(up.candidate.evr.clone()).style(Style::default().fg(theme.ok)),
+                    Cell::from(up.severity.label()).style(sev),
+                    Cell::from(up.advisory.clone().unwrap_or_else(|| "—".into()))
+                        .style(Style::default().fg(theme.dim)),
                 ])
+                .style(fundo)
             }
             None => Row::new(Vec::<Cell>::new()),
         },
         Tab::History => match app.history.get(idx) {
             Some(entry) => Row::new(vec![
-                Cell::from(entry.id.to_string()),
+                Cell::from(entry.id.to_string()).style(Style::default().fg(theme.dim)),
                 Cell::from(format_date(entry.start)),
                 Cell::from(entry.status.clone()).style(if entry.status == "Ok" {
-                    Style::default().fg(Color::Green)
+                    Style::default().fg(theme.ok)
                 } else {
-                    Style::default().fg(Color::Red)
+                    Style::default().fg(theme.danger)
                 }),
                 Cell::from(entry.changes().to_string()),
                 Cell::from(entry.description.clone()),
-            ]),
+            ])
+            .style(fundo),
             None => Row::new(Vec::<Cell>::new()),
         },
         Tab::Repos => match app.repos.get(idx) {
@@ -274,76 +306,83 @@ fn build_row(app: &App, idx: usize) -> Row<'static> {
                 Cell::from(repo.id.clone()),
                 Cell::from(repo.name.clone()),
                 Cell::from(if repo.enabled { "ativo" } else { "inativo" }).style(if repo.enabled {
-                    Style::default().fg(Color::Green)
+                    Style::default().fg(theme.ok)
                 } else {
-                    Style::default().fg(Color::DarkGray)
+                    Style::default().fg(theme.dim)
                 }),
-            ]),
+            ])
+            .style(fundo),
             None => Row::new(Vec::<Cell>::new()),
         },
     }
 }
 
-fn package_row(app: &App, pkg: &dnfm_core::Package) -> Row<'static> {
+fn package_row(app: &App, pkg: &dnfm_core::Package, theme: &Theme) -> Row<'static> {
     let protected = dnfm_core::safety::is_protected(&pkg.name).is_some();
-    let checked = if app.is_marked(pkg) {
-        Span::styled("[x]", Style::default().fg(Color::Yellow))
+    let marcado = app.is_marked(pkg);
+    let checked = if marcado {
+        Span::styled("▣", Style::default().fg(theme.mark))
     } else if protected {
-        Span::styled("[!]", Style::default().fg(Color::Red))
+        Span::styled("▨", Style::default().fg(theme.danger))
     } else {
-        Span::raw("[ ]")
+        Span::styled("▢", Style::default().fg(theme.dim))
     };
-    let name_style = if protected {
-        Style::default().fg(Color::Red)
-    } else if app.is_marked(pkg) {
-        Style::default().fg(Color::Yellow)
+    let nome_style = if protected {
+        Style::default().fg(theme.danger)
+    } else if marcado {
+        Style::default().fg(theme.mark)
     } else {
-        Style::default()
+        Style::default().fg(theme.text)
     };
-    let category = app.category_label(pkg);
-    let category_style = if app.custom_categories.get(&pkg.name, &pkg.arch).is_some() {
-        Style::default().fg(Color::Magenta)
-    } else {
-        Style::default().fg(Color::Gray)
-    };
+    let propria = app.custom_categories.get(&pkg.name, &pkg.arch).is_some();
+    let categoria = app.category_label(pkg);
     Row::new(vec![
         Cell::from(checked),
-        Cell::from(pkg.name.clone()).style(name_style),
-        Cell::from(pkg.evr.clone()),
-        Cell::from(pkg.repo_id.clone()).style(Style::default().fg(Color::DarkGray)),
-        Cell::from(format_size(pkg.size)),
-        Cell::from(format_date(pkg.install_time)).style(Style::default().fg(Color::DarkGray)),
-        Cell::from(category.to_string()).style(category_style),
+        Cell::from(pkg.name.clone()).style(nome_style),
+        Cell::from(pkg.evr.clone()).style(Style::default().fg(theme.text)),
+        Cell::from(pkg.repo_id.clone()).style(Style::default().fg(theme.dim)),
+        Cell::from(format!("{:>9}", format_size(pkg.size))).style(Style::default().fg(theme.dim)),
+        Cell::from(format!("{:>10}", format_date(pkg.install_time)))
+            .style(Style::default().fg(theme.dim)),
+        Cell::from(categoria.to_string()).style(if propria {
+            Style::default().fg(theme.accent_alt)
+        } else {
+            Style::default().fg(theme.text)
+        }),
         Cell::from(pkg.reason.label()).style(match pkg.reason {
-            Reason::User => Style::default().fg(Color::Cyan),
-            _ => Style::default().fg(Color::DarkGray),
+            Reason::User => Style::default().fg(theme.accent),
+            _ => Style::default().fg(theme.dim),
         }),
     ])
 }
 
 fn draw_details(frame: &mut Frame, app: &App, area: Rect) {
+    let theme = app.theme.clone();
     let block = Block::bordered()
-        .title(" detalhes ")
-        .border_style(Style::default().fg(Color::DarkGray));
+        .title(Span::styled(" detalhes ", Style::default().fg(theme.dim)))
+        .border_type(BorderType::Rounded)
+        .border_style(theme.border());
     let mut lines: Vec<Line> = Vec::new();
 
     if let Some(pkg) = app.current_package() {
         lines.push(Line::from(vec![
             Span::styled(
                 pkg.name.clone(),
-                Style::default().add_modifier(Modifier::BOLD),
+                Style::default().fg(theme.text).add_modifier(Modifier::BOLD),
             ),
-            Span::raw("  "),
-            Span::styled(pkg.evr.clone(), Style::default().fg(Color::DarkGray)),
-            Span::raw("  "),
-            Span::styled(pkg.arch.clone(), Style::default().fg(Color::DarkGray)),
-            Span::raw("  "),
-            Span::styled(
-                format!("[{}]", app.category_label(pkg)),
-                Style::default().fg(Color::Cyan),
-            ),
+            Span::styled(format!("  {}", pkg.evr), Style::default().fg(theme.dim)),
+            Span::styled(format!("  ·  {}", pkg.arch), Style::default().fg(theme.dim)),
         ]));
-        lines.push(Line::from(pkg.summary.clone()));
+        lines.push(Line::from(vec![Span::styled(
+            pkg.summary.clone(),
+            Style::default().fg(theme.text),
+        )]));
+        if app.details.is_none() {
+            lines.push(Line::from(Span::styled(
+                "enter: descrição, licença e URL",
+                Style::default().fg(theme.dim),
+            )));
+        }
         if let Some(details) = &app.details {
             if !details.description.is_empty() {
                 let desc: String = details
@@ -354,60 +393,71 @@ fn draw_details(frame: &mut Frame, app: &App, area: Rect) {
                     .join(" ");
                 lines.push(Line::from(Span::styled(
                     desc,
-                    Style::default().fg(Color::Gray),
+                    Style::default().fg(theme.dim),
                 )));
             }
-            let mut meta = Vec::new();
+            let mut meta: Vec<Span> = Vec::new();
             if !details.license.is_empty() {
-                meta.push(format!("licença: {}", details.license));
+                meta.push(Span::styled(
+                    format!("licença {}", details.license),
+                    Style::default().fg(theme.dim),
+                ));
             }
             if !details.vendor.is_empty() {
-                meta.push(format!("vendor: {}", details.vendor));
-            }
-            if !meta.is_empty() {
-                lines.push(Line::from(Span::styled(
-                    meta.join("   "),
-                    Style::default().fg(Color::DarkGray),
-                )));
+                meta.push(Span::styled(
+                    format!("  ·  {}", details.vendor),
+                    Style::default().fg(theme.dim),
+                ));
             }
             if !details.url.is_empty() {
-                lines.push(Line::from(Span::styled(
-                    details.url.clone(),
-                    Style::default().fg(Color::Blue),
-                )));
+                meta.push(Span::styled(
+                    format!("  ·  {}", details.url),
+                    Style::default().fg(theme.accent),
+                ));
+            }
+            if !meta.is_empty() {
+                lines.push(Line::from(meta));
             }
         }
+        let mut avisos: Vec<Span> = Vec::new();
         if let Some(mark) = app.marks.get(&pkg.name, &pkg.arch) {
-            lines.push(Line::from(Span::styled(
-                format!("marcado para remoção em {}", format_date(mark.marked_at)),
-                Style::default().fg(Color::Yellow),
-            )));
+            avisos.push(Span::styled(
+                format!("marcado em {}", format_date(mark.marked_at)),
+                Style::default().fg(theme.mark),
+            ));
         }
         if let Some(reason) = dnfm_core::safety::is_protected(&pkg.name) {
-            lines.push(Line::from(Span::styled(
-                format!("protegido: {reason}"),
-                Style::default().fg(Color::Red),
-            )));
+            avisos.push(Span::styled(
+                format!("  protegido: {reason}"),
+                Style::default().fg(theme.danger),
+            ));
+        }
+        if let Some(propria) = app.custom_categories.get(&pkg.name, &pkg.arch) {
+            avisos.push(Span::styled(
+                format!("  categoria própria: {propria}"),
+                Style::default().fg(theme.accent_alt),
+            ));
+        }
+        if !avisos.is_empty() {
+            lines.push(Line::from(avisos));
         }
     } else if let Some(up) = app.current_upgrade() {
         lines.push(Line::from(vec![
             Span::styled(
                 up.installed.name.clone(),
-                Style::default().add_modifier(Modifier::BOLD),
+                Style::default().fg(theme.text).add_modifier(Modifier::BOLD),
             ),
-            Span::raw("  "),
             Span::styled(
-                up.installed.evr.clone(),
-                Style::default().fg(Color::DarkGray),
+                format!("  {} → ", up.installed.evr),
+                Style::default().fg(theme.dim),
             ),
-            Span::raw(" → "),
-            Span::styled(up.candidate.evr.clone(), Style::default().fg(Color::Green)),
+            Span::styled(up.candidate.evr.clone(), Style::default().fg(theme.ok)),
         ]));
         lines.push(Line::from(up.candidate.summary.clone()));
         if let Some(advisory) = &up.advisory {
             lines.push(Line::from(Span::styled(
                 format!("advisory {advisory} · {}", up.severity.label()),
-                Style::default().fg(Color::Yellow),
+                Style::default().fg(theme.warn),
             )));
         }
     } else if let Some(RowRef::Header { label, count, .. }) = app.current_row() {
@@ -415,19 +465,22 @@ fn draw_details(frame: &mut Frame, app: &App, area: Rect) {
             Span::styled(
                 label.clone(),
                 Style::default()
-                    .fg(Color::Cyan)
+                    .fg(theme.accent)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::raw(format!("  {count} pacote(s)")),
+            Span::styled(
+                format!("  {count} pacote(s)"),
+                Style::default().fg(theme.dim),
+            ),
         ]));
         lines.push(Line::from(Span::styled(
-            "espaço recolhe/expande o grupo · a marca o grupo inteiro",
-            Style::default().fg(Color::DarkGray),
+            "espaço recolhe o grupo · a marca o grupo inteiro · clique no sidebar filtra",
+            Style::default().fg(theme.dim),
         )));
     } else {
         lines.push(Line::from(Span::styled(
             "nada selecionado",
-            Style::default().fg(Color::DarkGray),
+            Style::default().fg(theme.dim),
         )));
     }
 
@@ -438,48 +491,119 @@ fn draw_details(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn draw_footer(frame: &mut Frame, app: &App, area: Rect) {
+    let theme = app.theme.clone();
     let status_style = if app.loading {
-        Style::default().fg(Color::Yellow)
+        Style::default().fg(theme.warn)
     } else if app.status.contains("protegido") || app.status.contains("falhou") {
-        Style::default().fg(Color::Red)
+        Style::default().fg(theme.danger)
     } else {
-        Style::default().fg(Color::Gray)
+        Style::default().fg(theme.text)
     };
 
-    let left = if let Some(buffer) = &app.search {
+    let esquerda = if let Some(buffer) = &app.search {
         Line::from(vec![
-            Span::styled("/", Style::default().fg(Color::Cyan)),
-            Span::raw(buffer.clone()),
-            Span::styled("▏", Style::default().fg(Color::Cyan)),
+            Span::styled("buscar ", Style::default().fg(theme.dim)),
             Span::styled(
-                "  (enter aplica · esc limpa)",
-                Style::default().fg(Color::DarkGray),
+                format!("/{buffer}"),
+                Style::default()
+                    .fg(theme.accent)
+                    .add_modifier(Modifier::BOLD),
             ),
+            Span::styled("▏", Style::default().fg(theme.accent)),
+            Span::styled("  enter aplica · esc limpa", Style::default().fg(theme.dim)),
         ])
     } else {
-        let filtros = if app.filter.is_active() {
-            format!("filtros({})", app.filter.active_count())
-        } else {
-            "sem filtro".to_string()
-        };
-        Line::from(vec![
+        let mut spans = vec![
+            Span::styled(
+                if app.loading {
+                    format!("{} ", app.anim.spinner())
+                } else {
+                    "● ".to_string()
+                },
+                Style::default().fg(if app.loading { theme.warn } else { theme.ok }),
+            ),
             Span::styled(app.status.clone(), status_style),
-            Span::raw("  "),
+            Span::styled("   ", Style::default()),
             Span::styled(
-                format!("[{}]", app.sort.label()),
-                Style::default().fg(Color::DarkGray),
+                format!("ordenar: {}", app.sort.label()),
+                Style::default().fg(theme.dim),
             ),
-            Span::raw("  "),
+            Span::styled("  ·  ", Style::default().fg(theme.dim)),
             Span::styled(
-                format!("[{}]", app.group.label()),
-                Style::default().fg(Color::DarkGray),
+                format!("grupo: {}", app.group.label()),
+                Style::default().fg(theme.dim),
             ),
-            Span::raw("  "),
-            Span::styled(filtros, Style::default().fg(Color::DarkGray)),
-            Span::raw("  "),
-            Span::styled(app.selection_label(), Style::default().fg(Color::DarkGray)),
-        ])
+            Span::styled("  ·  ", Style::default().fg(theme.dim)),
+            Span::styled(
+                format!("filtros: {}", app.filter.active_count()),
+                Style::default().fg(if app.filter.is_active() {
+                    theme.accent
+                } else {
+                    theme.dim
+                }),
+            ),
+            Span::styled("  ·  ", Style::default().fg(theme.dim)),
+            Span::styled(app.selection_label(), Style::default().fg(theme.dim)),
+        ];
+        if app.loading {
+            spans.push(Span::styled(
+                format!("  {}", app.anim.spinner()),
+                Style::default().fg(theme.warn),
+            ));
+        }
+        Line::from(spans)
     };
-    let hints = Line::from(Span::styled(HINT, Style::default().fg(Color::DarkGray)));
-    frame.render_widget(Paragraph::new(vec![left, hints]), area);
+
+    frame.render_widget(Paragraph::new(vec![esquerda, keybar(app, &theme)]), area);
+}
+
+fn keybar<'a>(app: &App, theme: &Theme) -> Line<'a> {
+    let mut spans: Vec<Span<'a>> = Vec::new();
+    let mut push = |key: &'a str, desc: &'a str| {
+        spans.push(Span::styled(
+            format!(" {key} "),
+            Style::default()
+                .fg(theme.text)
+                .bg(theme.surface_alt)
+                .add_modifier(Modifier::BOLD),
+        ));
+        spans.push(Span::styled(
+            format!(" {desc}  "),
+            Style::default().fg(theme.dim),
+        ));
+    };
+
+    match app.tab {
+        Tab::Installed | Tab::Orphans => {
+            push("␣", "marcar");
+            push("t", "categoria");
+            push("f", "filtros");
+            push("o", "agrupar");
+            push("[ ]", "grupos");
+            push("p", "preview");
+            push("/", "buscar");
+        }
+        Tab::Updates => {
+            push("␣", "selecionar");
+            push("!", "só segurança");
+            push("P", "atualizar");
+            push("r", "recarregar");
+        }
+        Tab::History => {
+            push("r", "recarregar");
+            push("tab", "abas");
+        }
+        Tab::Repos => {
+            push("r", "recarregar");
+            push("tab", "abas");
+        }
+    }
+    push("?", "ajuda");
+    push("q", "sair");
+    Line::from(spans)
+}
+
+/// Chips visíveis, exportado para os testes conferirem a barra de filtros.
+pub fn active_chips(app: &App) -> Vec<(String, ChipClear)> {
+    header::chip_labels(&app.filter)
 }

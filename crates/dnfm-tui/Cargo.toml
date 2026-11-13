@@ -14,6 +14,8 @@ crossterm.workspace = true
 dnfm-core = { path = "../dnfm-core" }
 futures-util.workspace = true
 ratatui.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 

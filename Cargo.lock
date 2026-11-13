@@ -299,6 +299,8 @@ dependencies = [
  "dnfm-core",
  "futures-util",
  "ratatui",
+ "serde",
+ "serde_json",
  "tokio",
  "tracing",
 ]
