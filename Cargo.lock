@@ -260,7 +260,7 @@ dependencies = [
 
 [[package]]
 name = "dnfm-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -276,7 +276,7 @@ dependencies = [
 
 [[package]]
 name = "dnfm-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -292,7 +292,7 @@ dependencies = [
 
 [[package]]
 name = "dnfm-tui"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "crossterm",

@@ -1,5 +1,5 @@
 Name:           dnfm
-Version:        0.1.0
+Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Gerenciador de pacotes DNF5 com TUI e CLI
 
@@ -48,6 +48,10 @@ install -Dpm0644 %{SOURCE4} %{buildroot}%{_datadir}/fish/vendor_completions.d/dn
 %{_datadir}/fish/vendor_completions.d/dnfm.fish
 
 %changelog
+* Fri Nov 13 2026 Joao Pedro G. M. S. <joaopedrogms@users.noreply.github.com> - 0.2.0-1
+- Categorias próprias, agrupamento por categoria/família/repo/motivo, sidebar
+  com barras, chips de filtro, animações, temas e painel de filtros ampliado
+
 * Fri Nov 13 2026 Joao Pedro G. M. S. <joaopedrogms@users.noreply.github.com> - 0.1.0-1
 - Versão inicial: TUI com marcação em lote, preview de dependências,
   execução via polkit, atualizações com advisories, histórico, repos e
