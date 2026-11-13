@@ -181,7 +181,7 @@ pub async fn inspect(backend: &Arc<dyn DnfBackend>, opts: InspectOptions) -> i32
     );
     if let Some(detalhes) = details.as_ref() {
         if !detalhes.license.is_empty() {
-            println!("  licença    {}", detalhes.license);
+            println!("  licença    {}", truncar(&detalhes.license, 72));
         }
         if !detalhes.vendor.is_empty() {
             println!("  fornecedor {}", detalhes.vendor);
