@@ -1,0 +1,103 @@
+[
+  {
+    "baseurl": [
+      "https://download.copr.fedorainfracloud.org/results/faugus/faugus-launcher/fedora-45-x86_64/"
+    ],
+    "enabled": true,
+    "id": "copr:copr.fedorainfracloud.org:faugus:faugus-launcher",
+    "metalink": "",
+    "name": "Copr repo for faugus-launcher owned by faugus"
+  },
+  {
+    "baseurl": [
+      "https://download.copr.fedorainfracloud.org/results/ilyaz/LACT/fedora-45-x86_64/"
+    ],
+    "enabled": true,
+    "id": "copr:copr.fedorainfracloud.org:ilyaz:LACT",
+    "metalink": "",
+    "name": "Copr repo for LACT owned by ilyaz"
+  },
+  {
+    "baseurl": [],
+    "enabled": true,
+    "id": "fedora",
+    "metalink": "https://mirrors.fedoraproject.org/metalink?repo=fedora-45&arch=x86_64",
+    "name": "Fedora 45 - x86_64"
+  },
+  {
+    "baseurl": [],
+    "enabled": true,
+    "id": "fedora-cisco-openh264",
+    "metalink": "https://mirrors.fedoraproject.org/metalink?repo=fedora-cisco-openh264-45&arch=x86_64",
+    "name": "Fedora 45 openh264 (From Cisco) - x86_64"
+  },
+  {
+    "baseurl": [
+      "https://cli.github.com/packages/rpm"
+    ],
+    "enabled": true,
+    "id": "gh-cli",
+    "metalink": "",
+    "name": "packages for the GitHub CLI"
+  },
+  {
+    "baseurl": [
+      "https://download.opensuse.org/repositories/isv:/BrowserWorks/Fedora_44/"
+    ],
+    "enabled": true,
+    "id": "isv_BrowserWorks",
+    "metalink": "",
+    "name": "Waterfox (Fedora_44)"
+  },
+  {
+    "baseurl": [],
+    "enabled": true,
+    "id": "rpmfusion-free",
+    "metalink": "https://mirrors.rpmfusion.org/metalink?repo=free-fedora-45&arch=x86_64",
+    "name": "RPM Fusion for Fedora 45 - Free"
+  },
+  {
+    "baseurl": [],
+    "enabled": true,
+    "id": "rpmfusion-free-updates",
+    "metalink": "https://mirrors.rpmfusion.org/metalink?repo=free-fedora-updates-released-45&arch=x86_64",
+    "name": "RPM Fusion for Fedora 45 - Free - Updates"
+  },
+  {
+    "baseurl": [],
+    "enabled": true,
+    "id": "rpmfusion-nonfree",
+    "metalink": "https://mirrors.rpmfusion.org/metalink?repo=nonfree-fedora-45&arch=x86_64",
+    "name": "RPM Fusion for Fedora 45 - Nonfree"
+  },
+  {
+    "baseurl": [],
+    "enabled": true,
+    "id": "rpmfusion-nonfree-updates",
+    "metalink": "https://mirrors.rpmfusion.org/metalink?repo=nonfree-fedora-updates-released-45&arch=x86_64",
+    "name": "RPM Fusion for Fedora 45 - Nonfree - Updates"
+  },
+  {
+    "baseurl": [],
+    "enabled": true,
+    "id": "terra",
+    "metalink": "https://tetsudou.fyralabs.com/metalink?repo=terra45&arch=x86_64",
+    "name": "Terra 45"
+  },
+  {
+    "baseurl": [],
+    "enabled": true,
+    "id": "updates",
+    "metalink": "https://mirrors.fedoraproject.org/metalink?repo=updates-released-f45&arch=x86_64",
+    "name": "Fedora 45 - x86_64 - Updates"
+  },
+  {
+    "baseurl": [
+      "https://releases.warp.dev/linux/rpm/stable"
+    ],
+    "enabled": true,
+    "id": "warpdotdev",
+    "metalink": "",
+    "name": "warpdotdev"
+  }
+]

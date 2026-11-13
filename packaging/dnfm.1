@@ -1,0 +1,89 @@
+.TH DNFM 1 "2026-11-13" "dnfm 0.1.0" "Comandos do usuário"
+.SH NOME
+dnfm \- gerenciador de pacotes DNF5 com interface de terminal e linha de comando
+.SH SINOPSE
+.B dnfm
+[\fIopções\fR] [\fIsubcomando\fR]
+.SH DESCRIÇÃO
+.B dnfm
+gerencia os pacotes instalados no Fedora através do
+.BR dnf5daemon (8),
+sem reimplementar o resolvedor do DNF.
+A interface de terminal permite marcar pacotes para remoção em lote, ver o
+efeito da transação antes de aplicá-la e acompanhar o progresso em tempo real.
+As operações de escrita são autenticadas pelo polkit; o resto roda como usuário
+comum.
+.SH COMANDOS
+.TP
+.B tui
+Abre a interface de terminal (padrão quando nenhum subcomando é dado).
+.TP
+.B list
+Lista pacotes instalados. Opções: \fB-p/--pattern\fR, \fB-r/--repo\fR,
+\fB-s/--sort\fR (name, size, date, repo, reason), \fB-n/--limit\fR,
+\fB--json\fR.
+.TP
+.B updates
+Mostra atualizações disponíveis com versão instalada, versão nova, severidade
+e advisory. Opções: \fB--security-only\fR, \fB--json\fR.
+.TP
+.B marks
+Sem argumento, lista as marcações. Subcomandos: \fBadd\fR, \fBrm\fR,
+\fBclear\fR. As marcações ficam em
+.IR $XDG_STATE_HOME/dnfm/marks.json .
+.TP
+.B remove
+Remove pacotes. Sempre resolve a transação antes: mostra o que o usuário pediu,
+o que sai junto como dependência e quanto espaço é liberado. Sem \fB--yes\fR
+apenas exibe a prévia. Opções: \fB--from-marks\fR, \fB--dry-run\fR,
+\fB-y/--yes\fR, \fB--json\fR.
+.TP
+.B history
+Histórico de transações do DNF. Opções: \fB-l/--limit\fR, \fB--json\fR.
+.TP
+.B orphans
+Pacotes instalados como dependência que nenhum outro pacote requer.
+.TP
+.B repos
+Repositórios configurados e seu estado.
+.TP
+.B completions
+Gera script de completação para \fBbash\fR, \fBzsh\fR ou \fBfish\fR.
+.SH "CÓDIGO DE SAÍDA"
+.TP
+.B 0
+Sucesso.
+.TP
+.B 1
+Erro.
+.TP
+.B 2
+Problemas de resolução; nada foi executado.
+.TP
+.B 3
+Autenticação negada pelo polkit.
+.TP
+.B 4
+Daemon dnf5 indisponível.
+.SH ARQUIVOS
+.TP
+.I $XDG_STATE_HOME/dnfm/marks.json
+Marcações de remoção (padrão: \fI~/.local/state/dnfm/marks.json\fR). Gravação
+atômica; arquivo corrompido é preservado como \fImarks.json.corrupt\fR.
+.SH SEGURANÇA
+Pacotes essenciais (\fBdnf5\fR, \fBglibc\fR, \fBsystemd\fR, kernel, \fBsudo\fR,
+entre outros) não podem ser marcados. Além disso, nenhuma transação é executada
+quando o resolvedor do DNF reporta problemas, o que cobre dependências que a
+lista estática não conhece.
+.SH EXEMPLOS
+.PP
+.nf
+dnfm list --pattern texlive --sort size
+dnfm marks add vlc firefox
+dnfm remove --from-marks --dry-run
+dnfm updates --security-only --json | jq -r '.data[].name'
+.fi
+.SH "VEJA TAMBÉM"
+.BR dnf5 (8),
+.BR dnf5daemon-dbus-api (8),
+.BR rpm (8)

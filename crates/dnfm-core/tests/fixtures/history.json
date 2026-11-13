@@ -1,0 +1,59 @@
+[
+  {
+    "description": "dnf remove warp-terminal -y",
+    "downgraded": [],
+    "end": 1794567130,
+    "id": 99,
+    "installed": [],
+    "reinstalled": [],
+    "removed": [
+      {
+        "arch": "x86_64",
+        "evr": "v0.2026.11.04.08.17.stable_01-1",
+        "name": "warp-terminal"
+      }
+    ],
+    "start": 1794567129,
+    "status": "Ok",
+    "upgraded": [],
+    "user_id": 1000
+  },
+  {
+    "description": "dnf install /home/joaopedrogms/zapfastie-0.21.1-1.fc45.x86_64.rpm --nogpgcheck",
+    "downgraded": [],
+    "end": 1794514513,
+    "id": 98,
+    "installed": [
+      {
+        "arch": "x86_64",
+        "evr": "0.21.1-1.fc45",
+        "name": "zapfastie"
+      }
+    ],
+    "reinstalled": [],
+    "removed": [],
+    "start": 1794514512,
+    "status": "Ok",
+    "upgraded": [],
+    "user_id": 1000
+  },
+  {
+    "description": "dnf remove zapfastie -y",
+    "downgraded": [],
+    "end": 1794514507,
+    "id": 97,
+    "installed": [],
+    "reinstalled": [],
+    "removed": [
+      {
+        "arch": "x86_64",
+        "evr": "0.21.1-1.fc45",
+        "name": "zapfastie"
+      }
+    ],
+    "start": 1794514506,
+    "status": "Ok",
+    "upgraded": [],
+    "user_id": 1000
+  }
+]

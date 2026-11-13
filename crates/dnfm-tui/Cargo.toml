@@ -1,0 +1,21 @@
+[package]
+name = "dnfm-tui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Interface de terminal do dnfm"
+
+[dependencies]
+anyhow.workspace = true
+crossterm.workspace = true
+dnfm-core = { path = "../dnfm-core" }
+futures-util.workspace = true
+ratatui.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }

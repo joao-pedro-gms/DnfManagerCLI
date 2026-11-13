@@ -1,0 +1,28 @@
+[package]
+name = "dnfm-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Domínio e backend D-Bus do dnfm, um gerenciador de pacotes DNF5"
+
+[features]
+default = ["dbus"]
+dbus = ["dep:zbus", "dep:futures-util"]
+
+[dependencies]
+anyhow = "1"
+async-trait.workspace = true
+futures-util = { workspace = true, optional = true }
+regex = "1"
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+zbus = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "time"] }

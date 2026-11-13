@@ -1,0 +1,112 @@
+{
+  "target": "dosbox-staging",
+  "result": 0,
+  "items": [
+    [
+      "Package",
+      "Remove",
+      "Clean",
+      {},
+      {
+        "arch": "x86_64",
+        "download_size": 0,
+        "epoch": "0",
+        "evr": "2.4.0-1.fc45",
+        "from_repo_id": "fedora",
+        "full_nevra": "SDL2_net-0:2.4.0-1.fc45.x86_64",
+        "id": 34,
+        "install_size": 27784,
+        "name": "SDL2_net",
+        "reason": "Dependency",
+        "release": "1.fc45",
+        "repo_id": "@System",
+        "version": "2.4.0"
+      }
+    ],
+    [
+      "Package",
+      "Remove",
+      "User",
+      {},
+      {
+        "arch": "x86_64",
+        "download_size": 0,
+        "epoch": "0",
+        "evr": "0.82.2-6.fc45",
+        "from_repo_id": "fedora",
+        "full_nevra": "dosbox-staging-0:0.82.2-6.fc45.x86_64",
+        "id": 405,
+        "install_size": 16417176,
+        "name": "dosbox-staging",
+        "reason": "Weak Dependency",
+        "release": "6.fc45",
+        "repo_id": "@System",
+        "version": "0.82.2"
+      }
+    ],
+    [
+      "Package",
+      "Remove",
+      "Clean",
+      {},
+      {
+        "arch": "x86_64",
+        "download_size": 0,
+        "epoch": "0",
+        "evr": "1.10.0-3.fc45",
+        "from_repo_id": "fedora",
+        "full_nevra": "iir1-0:1.10.0-3.fc45.x86_64",
+        "id": 818,
+        "install_size": 49961,
+        "name": "iir1",
+        "reason": "Dependency",
+        "release": "3.fc45",
+        "repo_id": "@System",
+        "version": "1.10.0"
+      }
+    ],
+    [
+      "Package",
+      "Remove",
+      "Clean",
+      {},
+      {
+        "arch": "x86_64",
+        "download_size": 0,
+        "epoch": "0",
+        "evr": "4.9.3-2.fc45",
+        "from_repo_id": "fedora",
+        "full_nevra": "libslirp-0:4.9.3-2.fc45.x86_64",
+        "id": 1632,
+        "install_size": 161368,
+        "name": "libslirp",
+        "reason": "Dependency",
+        "release": "2.fc45",
+        "repo_id": "@System",
+        "version": "4.9.3"
+      }
+    ],
+    [
+      "Package",
+      "Remove",
+      "Clean",
+      {},
+      {
+        "arch": "x86_64",
+        "download_size": 0,
+        "epoch": "0",
+        "evr": "2.7.3-3.fc45",
+        "from_repo_id": "fedora",
+        "full_nevra": "mt32emu-0:2.7.3-3.fc45.x86_64",
+        "id": 1924,
+        "install_size": 270871,
+        "name": "mt32emu",
+        "reason": "Dependency",
+        "release": "3.fc45",
+        "repo_id": "@System",
+        "version": "2.7.3"
+      }
+    ]
+  ],
+  "problems": []
+}

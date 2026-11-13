@@ -1,0 +1,8 @@
+{
+  "target": "glibc",
+  "result": 2,
+  "items": [],
+  "problems": [
+    "Problem: installed package linuxtoys-7.10.1-1.x86_64 requires rtld(GNU_HASH), but none of the providers can be installed\n  - conflicting requests\n  - problem with installed package"
+  ]
+}

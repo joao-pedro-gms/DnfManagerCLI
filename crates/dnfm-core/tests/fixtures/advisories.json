@@ -1,0 +1,2856 @@
+[
+  {
+    "advisoryid": 99259,
+    "collections": [
+      {
+        "modules": [],
+        "packages": [
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev",
+            "nevra": "libblockdev-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev",
+            "nevra": "libblockdev-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev",
+            "nevra": "libblockdev-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev",
+            "nevra": "libblockdev-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "src",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev",
+            "nevra": "libblockdev-3.6.0-1.fc45.src",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev",
+            "nevra": "libblockdev-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs",
+            "nevra": "libblockdev-btrfs-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs",
+            "nevra": "libblockdev-btrfs-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs",
+            "nevra": "libblockdev-btrfs-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs",
+            "nevra": "libblockdev-btrfs-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-btrfs",
+            "nevra": "libblockdev-btrfs-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-debuginfo",
+            "nevra": "libblockdev-btrfs-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-debuginfo",
+            "nevra": "libblockdev-btrfs-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-debuginfo",
+            "nevra": "libblockdev-btrfs-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-debuginfo",
+            "nevra": "libblockdev-btrfs-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-debuginfo",
+            "nevra": "libblockdev-btrfs-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-devel",
+            "nevra": "libblockdev-btrfs-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-devel",
+            "nevra": "libblockdev-btrfs-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-devel",
+            "nevra": "libblockdev-btrfs-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-devel",
+            "nevra": "libblockdev-btrfs-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-btrfs-devel",
+            "nevra": "libblockdev-btrfs-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto",
+            "nevra": "libblockdev-crypto-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto",
+            "nevra": "libblockdev-crypto-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto",
+            "nevra": "libblockdev-crypto-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto",
+            "nevra": "libblockdev-crypto-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-crypto",
+            "nevra": "libblockdev-crypto-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-debuginfo",
+            "nevra": "libblockdev-crypto-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-debuginfo",
+            "nevra": "libblockdev-crypto-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-debuginfo",
+            "nevra": "libblockdev-crypto-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-debuginfo",
+            "nevra": "libblockdev-crypto-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-debuginfo",
+            "nevra": "libblockdev-crypto-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-devel",
+            "nevra": "libblockdev-crypto-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-devel",
+            "nevra": "libblockdev-crypto-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-devel",
+            "nevra": "libblockdev-crypto-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-devel",
+            "nevra": "libblockdev-crypto-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-crypto-devel",
+            "nevra": "libblockdev-crypto-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debuginfo",
+            "nevra": "libblockdev-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debuginfo",
+            "nevra": "libblockdev-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debuginfo",
+            "nevra": "libblockdev-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debuginfo",
+            "nevra": "libblockdev-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debuginfo",
+            "nevra": "libblockdev-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debugsource",
+            "nevra": "libblockdev-debugsource-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debugsource",
+            "nevra": "libblockdev-debugsource-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debugsource",
+            "nevra": "libblockdev-debugsource-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debugsource",
+            "nevra": "libblockdev-debugsource-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-debugsource",
+            "nevra": "libblockdev-debugsource-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-devel",
+            "nevra": "libblockdev-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-devel",
+            "nevra": "libblockdev-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-devel",
+            "nevra": "libblockdev-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-devel",
+            "nevra": "libblockdev-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-devel",
+            "nevra": "libblockdev-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm",
+            "nevra": "libblockdev-dm-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm",
+            "nevra": "libblockdev-dm-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm",
+            "nevra": "libblockdev-dm-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm",
+            "nevra": "libblockdev-dm-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-dm",
+            "nevra": "libblockdev-dm-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-debuginfo",
+            "nevra": "libblockdev-dm-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-debuginfo",
+            "nevra": "libblockdev-dm-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-debuginfo",
+            "nevra": "libblockdev-dm-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-debuginfo",
+            "nevra": "libblockdev-dm-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-debuginfo",
+            "nevra": "libblockdev-dm-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-devel",
+            "nevra": "libblockdev-dm-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-devel",
+            "nevra": "libblockdev-dm-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-devel",
+            "nevra": "libblockdev-dm-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-devel",
+            "nevra": "libblockdev-dm-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-dm-devel",
+            "nevra": "libblockdev-dm-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs",
+            "nevra": "libblockdev-fs-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs",
+            "nevra": "libblockdev-fs-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs",
+            "nevra": "libblockdev-fs-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs",
+            "nevra": "libblockdev-fs-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-fs",
+            "nevra": "libblockdev-fs-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-debuginfo",
+            "nevra": "libblockdev-fs-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-debuginfo",
+            "nevra": "libblockdev-fs-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-debuginfo",
+            "nevra": "libblockdev-fs-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-debuginfo",
+            "nevra": "libblockdev-fs-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-debuginfo",
+            "nevra": "libblockdev-fs-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-devel",
+            "nevra": "libblockdev-fs-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-devel",
+            "nevra": "libblockdev-fs-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-devel",
+            "nevra": "libblockdev-fs-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-devel",
+            "nevra": "libblockdev-fs-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-fs-devel",
+            "nevra": "libblockdev-fs-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop",
+            "nevra": "libblockdev-loop-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop",
+            "nevra": "libblockdev-loop-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop",
+            "nevra": "libblockdev-loop-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop",
+            "nevra": "libblockdev-loop-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-loop",
+            "nevra": "libblockdev-loop-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-debuginfo",
+            "nevra": "libblockdev-loop-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-debuginfo",
+            "nevra": "libblockdev-loop-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-debuginfo",
+            "nevra": "libblockdev-loop-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-debuginfo",
+            "nevra": "libblockdev-loop-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-debuginfo",
+            "nevra": "libblockdev-loop-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-devel",
+            "nevra": "libblockdev-loop-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-devel",
+            "nevra": "libblockdev-loop-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-devel",
+            "nevra": "libblockdev-loop-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-devel",
+            "nevra": "libblockdev-loop-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-loop-devel",
+            "nevra": "libblockdev-loop-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm",
+            "nevra": "libblockdev-lvm-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm",
+            "nevra": "libblockdev-lvm-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm",
+            "nevra": "libblockdev-lvm-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm",
+            "nevra": "libblockdev-lvm-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-lvm",
+            "nevra": "libblockdev-lvm-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus",
+            "nevra": "libblockdev-lvm-dbus-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus",
+            "nevra": "libblockdev-lvm-dbus-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus",
+            "nevra": "libblockdev-lvm-dbus-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus",
+            "nevra": "libblockdev-lvm-dbus-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus",
+            "nevra": "libblockdev-lvm-dbus-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-debuginfo",
+            "nevra": "libblockdev-lvm-dbus-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-debuginfo",
+            "nevra": "libblockdev-lvm-dbus-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-debuginfo",
+            "nevra": "libblockdev-lvm-dbus-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-debuginfo",
+            "nevra": "libblockdev-lvm-dbus-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-debuginfo",
+            "nevra": "libblockdev-lvm-dbus-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-devel",
+            "nevra": "libblockdev-lvm-dbus-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-devel",
+            "nevra": "libblockdev-lvm-dbus-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-devel",
+            "nevra": "libblockdev-lvm-dbus-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-devel",
+            "nevra": "libblockdev-lvm-dbus-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-dbus-devel",
+            "nevra": "libblockdev-lvm-dbus-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-debuginfo",
+            "nevra": "libblockdev-lvm-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-debuginfo",
+            "nevra": "libblockdev-lvm-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-debuginfo",
+            "nevra": "libblockdev-lvm-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-debuginfo",
+            "nevra": "libblockdev-lvm-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-debuginfo",
+            "nevra": "libblockdev-lvm-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-devel",
+            "nevra": "libblockdev-lvm-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-devel",
+            "nevra": "libblockdev-lvm-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-devel",
+            "nevra": "libblockdev-lvm-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-devel",
+            "nevra": "libblockdev-lvm-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-lvm-devel",
+            "nevra": "libblockdev-lvm-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid",
+            "nevra": "libblockdev-mdraid-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid",
+            "nevra": "libblockdev-mdraid-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid",
+            "nevra": "libblockdev-mdraid-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid",
+            "nevra": "libblockdev-mdraid-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-mdraid",
+            "nevra": "libblockdev-mdraid-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-debuginfo",
+            "nevra": "libblockdev-mdraid-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-debuginfo",
+            "nevra": "libblockdev-mdraid-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-debuginfo",
+            "nevra": "libblockdev-mdraid-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-debuginfo",
+            "nevra": "libblockdev-mdraid-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-debuginfo",
+            "nevra": "libblockdev-mdraid-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-devel",
+            "nevra": "libblockdev-mdraid-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-devel",
+            "nevra": "libblockdev-mdraid-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-devel",
+            "nevra": "libblockdev-mdraid-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-devel",
+            "nevra": "libblockdev-mdraid-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mdraid-devel",
+            "nevra": "libblockdev-mdraid-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath",
+            "nevra": "libblockdev-mpath-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath",
+            "nevra": "libblockdev-mpath-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath",
+            "nevra": "libblockdev-mpath-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath",
+            "nevra": "libblockdev-mpath-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-mpath",
+            "nevra": "libblockdev-mpath-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-debuginfo",
+            "nevra": "libblockdev-mpath-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-debuginfo",
+            "nevra": "libblockdev-mpath-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-debuginfo",
+            "nevra": "libblockdev-mpath-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-debuginfo",
+            "nevra": "libblockdev-mpath-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-debuginfo",
+            "nevra": "libblockdev-mpath-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-devel",
+            "nevra": "libblockdev-mpath-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-devel",
+            "nevra": "libblockdev-mpath-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-devel",
+            "nevra": "libblockdev-mpath-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-devel",
+            "nevra": "libblockdev-mpath-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-mpath-devel",
+            "nevra": "libblockdev-mpath-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm",
+            "nevra": "libblockdev-nvdimm-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm",
+            "nevra": "libblockdev-nvdimm-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm",
+            "nevra": "libblockdev-nvdimm-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm",
+            "nevra": "libblockdev-nvdimm-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-nvdimm",
+            "nevra": "libblockdev-nvdimm-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-debuginfo",
+            "nevra": "libblockdev-nvdimm-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-debuginfo",
+            "nevra": "libblockdev-nvdimm-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-debuginfo",
+            "nevra": "libblockdev-nvdimm-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-debuginfo",
+            "nevra": "libblockdev-nvdimm-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-debuginfo",
+            "nevra": "libblockdev-nvdimm-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-devel",
+            "nevra": "libblockdev-nvdimm-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-devel",
+            "nevra": "libblockdev-nvdimm-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-devel",
+            "nevra": "libblockdev-nvdimm-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-devel",
+            "nevra": "libblockdev-nvdimm-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvdimm-devel",
+            "nevra": "libblockdev-nvdimm-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme",
+            "nevra": "libblockdev-nvme-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme",
+            "nevra": "libblockdev-nvme-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme",
+            "nevra": "libblockdev-nvme-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme",
+            "nevra": "libblockdev-nvme-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-nvme",
+            "nevra": "libblockdev-nvme-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-debuginfo",
+            "nevra": "libblockdev-nvme-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-debuginfo",
+            "nevra": "libblockdev-nvme-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-debuginfo",
+            "nevra": "libblockdev-nvme-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-debuginfo",
+            "nevra": "libblockdev-nvme-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-debuginfo",
+            "nevra": "libblockdev-nvme-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-devel",
+            "nevra": "libblockdev-nvme-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-devel",
+            "nevra": "libblockdev-nvme-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-devel",
+            "nevra": "libblockdev-nvme-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-devel",
+            "nevra": "libblockdev-nvme-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-nvme-devel",
+            "nevra": "libblockdev-nvme-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part",
+            "nevra": "libblockdev-part-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part",
+            "nevra": "libblockdev-part-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part",
+            "nevra": "libblockdev-part-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part",
+            "nevra": "libblockdev-part-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-part",
+            "nevra": "libblockdev-part-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-debuginfo",
+            "nevra": "libblockdev-part-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-debuginfo",
+            "nevra": "libblockdev-part-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-debuginfo",
+            "nevra": "libblockdev-part-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-debuginfo",
+            "nevra": "libblockdev-part-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-debuginfo",
+            "nevra": "libblockdev-part-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-devel",
+            "nevra": "libblockdev-part-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-devel",
+            "nevra": "libblockdev-part-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-devel",
+            "nevra": "libblockdev-part-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-devel",
+            "nevra": "libblockdev-part-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-part-devel",
+            "nevra": "libblockdev-part-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-plugins-all",
+            "nevra": "libblockdev-plugins-all-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-plugins-all",
+            "nevra": "libblockdev-plugins-all-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-plugins-all",
+            "nevra": "libblockdev-plugins-all-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-plugins-all",
+            "nevra": "libblockdev-plugins-all-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-plugins-all",
+            "nevra": "libblockdev-plugins-all-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-s390",
+            "nevra": "libblockdev-s390-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-s390-debuginfo",
+            "nevra": "libblockdev-s390-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-s390-devel",
+            "nevra": "libblockdev-s390-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart",
+            "nevra": "libblockdev-smart-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart",
+            "nevra": "libblockdev-smart-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart",
+            "nevra": "libblockdev-smart-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart",
+            "nevra": "libblockdev-smart-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-smart",
+            "nevra": "libblockdev-smart-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-debuginfo",
+            "nevra": "libblockdev-smart-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-debuginfo",
+            "nevra": "libblockdev-smart-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-debuginfo",
+            "nevra": "libblockdev-smart-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-debuginfo",
+            "nevra": "libblockdev-smart-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-debuginfo",
+            "nevra": "libblockdev-smart-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-devel",
+            "nevra": "libblockdev-smart-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-devel",
+            "nevra": "libblockdev-smart-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-devel",
+            "nevra": "libblockdev-smart-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-devel",
+            "nevra": "libblockdev-smart-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smart-devel",
+            "nevra": "libblockdev-smart-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools",
+            "nevra": "libblockdev-smartmontools-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools",
+            "nevra": "libblockdev-smartmontools-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools",
+            "nevra": "libblockdev-smartmontools-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools",
+            "nevra": "libblockdev-smartmontools-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-smartmontools",
+            "nevra": "libblockdev-smartmontools-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-debuginfo",
+            "nevra": "libblockdev-smartmontools-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-debuginfo",
+            "nevra": "libblockdev-smartmontools-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-debuginfo",
+            "nevra": "libblockdev-smartmontools-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-debuginfo",
+            "nevra": "libblockdev-smartmontools-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-debuginfo",
+            "nevra": "libblockdev-smartmontools-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-devel",
+            "nevra": "libblockdev-smartmontools-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-devel",
+            "nevra": "libblockdev-smartmontools-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-devel",
+            "nevra": "libblockdev-smartmontools-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-devel",
+            "nevra": "libblockdev-smartmontools-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-smartmontools-devel",
+            "nevra": "libblockdev-smartmontools-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap",
+            "nevra": "libblockdev-swap-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap",
+            "nevra": "libblockdev-swap-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap",
+            "nevra": "libblockdev-swap-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap",
+            "nevra": "libblockdev-swap-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-swap",
+            "nevra": "libblockdev-swap-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-debuginfo",
+            "nevra": "libblockdev-swap-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-debuginfo",
+            "nevra": "libblockdev-swap-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-debuginfo",
+            "nevra": "libblockdev-swap-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-debuginfo",
+            "nevra": "libblockdev-swap-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-debuginfo",
+            "nevra": "libblockdev-swap-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-devel",
+            "nevra": "libblockdev-swap-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-devel",
+            "nevra": "libblockdev-swap-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-devel",
+            "nevra": "libblockdev-swap-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-devel",
+            "nevra": "libblockdev-swap-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-swap-devel",
+            "nevra": "libblockdev-swap-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-tools",
+            "nevra": "libblockdev-tools-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-tools",
+            "nevra": "libblockdev-tools-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-tools",
+            "nevra": "libblockdev-tools-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-tools",
+            "nevra": "libblockdev-tools-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-tools",
+            "nevra": "libblockdev-tools-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-tools-debuginfo",
+            "nevra": "libblockdev-tools-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-tools-debuginfo",
+            "nevra": "libblockdev-tools-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-tools-debuginfo",
+            "nevra": "libblockdev-tools-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-tools-debuginfo",
+            "nevra": "libblockdev-tools-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-tools-debuginfo",
+            "nevra": "libblockdev-tools-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils",
+            "nevra": "libblockdev-utils-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils",
+            "nevra": "libblockdev-utils-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils",
+            "nevra": "libblockdev-utils-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils",
+            "nevra": "libblockdev-utils-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "libblockdev-utils",
+            "nevra": "libblockdev-utils-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-debuginfo",
+            "nevra": "libblockdev-utils-debuginfo-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-debuginfo",
+            "nevra": "libblockdev-utils-debuginfo-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-debuginfo",
+            "nevra": "libblockdev-utils-debuginfo-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-debuginfo",
+            "nevra": "libblockdev-utils-debuginfo-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-debuginfo",
+            "nevra": "libblockdev-utils-debuginfo-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-devel",
+            "nevra": "libblockdev-utils-devel-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-devel",
+            "nevra": "libblockdev-utils-devel-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-devel",
+            "nevra": "libblockdev-utils-devel-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-devel",
+            "nevra": "libblockdev-utils-devel-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "libblockdev-utils-devel",
+            "nevra": "libblockdev-utils-devel-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "python3-blockdev",
+            "nevra": "python3-blockdev-3.6.0-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "i686",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "python3-blockdev",
+            "nevra": "python3-blockdev-3.6.0-1.fc45.i686",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "python3-blockdev",
+            "nevra": "python3-blockdev-3.6.0-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "python3-blockdev",
+            "nevra": "python3-blockdev-3.6.0-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "python3-blockdev",
+            "nevra": "python3-blockdev-3.6.0-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "3.6.0"
+          }
+        ]
+      }
+    ],
+    "description": "Automatic update for libblockdev-3.6.0-1.fc45.\n\n##### **Changelog for libblockdev**\n\n```\n* Wed Nov 11 2026 Packit <hello",
+    "severity": "None",
+    "title": "libblockdev-3.6.0-1.fc45",
+    "type": "enhancement"
+  },
+  {
+    "advisoryid": 99265,
+    "collections": [
+      {
+        "modules": [],
+        "packages": [
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit",
+            "nevra": "cockpit-372-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit",
+            "nevra": "cockpit-372-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit",
+            "nevra": "cockpit-372-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "src",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit",
+            "nevra": "cockpit-372-1.fc45.src",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit",
+            "nevra": "cockpit-372-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "noarch",
+            "applicability": "available",
+            "e": "0",
+            "n": "cockpit-bridge",
+            "nevra": "cockpit-bridge-372-1.fc45.noarch",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-debuginfo",
+            "nevra": "cockpit-debuginfo-372-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-debuginfo",
+            "nevra": "cockpit-debuginfo-372-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-debuginfo",
+            "nevra": "cockpit-debuginfo-372-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-debuginfo",
+            "nevra": "cockpit-debuginfo-372-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-debugsource",
+            "nevra": "cockpit-debugsource-372-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-debugsource",
+            "nevra": "cockpit-debugsource-372-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-debugsource",
+            "nevra": "cockpit-debugsource-372-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-debugsource",
+            "nevra": "cockpit-debugsource-372-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "noarch",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-doc",
+            "nevra": "cockpit-doc-372-1.fc45.noarch",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "noarch",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-kdump",
+            "nevra": "cockpit-kdump-372-1.fc45.noarch",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "noarch",
+            "applicability": "available",
+            "e": "0",
+            "n": "cockpit-networkmanager",
+            "nevra": "cockpit-networkmanager-372-1.fc45.noarch",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "noarch",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-packagekit",
+            "nevra": "cockpit-packagekit-372-1.fc45.noarch",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "noarch",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-selinux",
+            "nevra": "cockpit-selinux-372-1.fc45.noarch",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "noarch",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-sosreport",
+            "nevra": "cockpit-sosreport-372-1.fc45.noarch",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "noarch",
+            "applicability": "available",
+            "e": "0",
+            "n": "cockpit-storaged",
+            "nevra": "cockpit-storaged-372-1.fc45.noarch",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "noarch",
+            "applicability": "available",
+            "e": "0",
+            "n": "cockpit-system",
+            "nevra": "cockpit-system-372-1.fc45.noarch",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-ws",
+            "nevra": "cockpit-ws-372-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-ws",
+            "nevra": "cockpit-ws-372-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-ws",
+            "nevra": "cockpit-ws-372-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "cockpit-ws",
+            "nevra": "cockpit-ws-372-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "aarch64",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-ws-selinux",
+            "nevra": "cockpit-ws-selinux-372-1.fc45.aarch64",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "ppc64le",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-ws-selinux",
+            "nevra": "cockpit-ws-selinux-372-1.fc45.ppc64le",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "s390x",
+            "applicability": "unrelated",
+            "e": "0",
+            "n": "cockpit-ws-selinux",
+            "nevra": "cockpit-ws-selinux-372-1.fc45.s390x",
+            "r": "1.fc45",
+            "v": "372"
+          },
+          {
+            "a": "x86_64",
+            "applicability": "available",
+            "e": "0",
+            "n": "cockpit-ws-selinux",
+            "nevra": "cockpit-ws-selinux-372-1.fc45.x86_64",
+            "r": "1.fc45",
+            "v": "372"
+          }
+        ]
+      }
+    ],
+    "description": "Automatic update for cockpit-372-1.fc45.\n",
+    "severity": "None",
+    "title": "cockpit-372-1.fc45",
+    "type": "security"
+  }
+]
