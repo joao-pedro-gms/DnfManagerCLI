@@ -51,12 +51,52 @@ pub fn parse_catalog_file(path: &Path) -> Result<HashMap<String, AppStreamCompon
     parse_catalog(BufReader::new(reader))
 }
 
+fn aplica_texto(
+    valor: String,
+    stack: &[String],
+    comp: &mut Option<AppStreamComponent>,
+    pkgname: &mut Option<String>,
+    in_categories: bool,
+) {
+    let atual = stack.last().map(String::as_str).unwrap_or("");
+    if let Some(component) = comp.as_mut() {
+        match atual {
+            "id" => component.id = valor.trim().to_string(),
+            "summary" => component
+                .summary
+                .get_or_insert_with(String::new)
+                .push_str(&valor),
+            "pkgname" => *pkgname = Some(valor.trim().to_string()),
+            // Componentes sem <pkgname> costumam declarar o RPM em <provides><binary>.
+            "binary" if pkgname.is_none() => *pkgname = Some(valor.trim().to_string()),
+            "category" if in_categories => component.categories.push(valor.trim().to_string()),
+            _ => {}
+        }
+    }
+}
+
+fn resolve_general_ref(referencia: quick_xml::events::BytesRef<'_>) -> Option<String> {
+    if let Ok(Some(caractere)) = referencia.resolve_char_ref() {
+        return Some(caractere.to_string());
+    }
+    let entidade = referencia.decode().ok()?;
+    let valor = match entidade.as_ref() {
+        "amp" => "&",
+        "lt" => "<",
+        "gt" => ">",
+        "apos" => "'",
+        "quot" => "\"",
+        _ => return None,
+    };
+    Some(valor.to_string())
+}
+
 /// Parser por streaming: o catálogo do Fedora tem dezenas de MB.
 pub fn parse_catalog<R: std::io::BufRead>(
     reader: R,
 ) -> Result<HashMap<String, AppStreamComponent>, String> {
     let mut reader = Reader::from_reader(reader);
-    reader.config_mut().trim_text(true);
+    reader.config_mut().trim_text(false);
     let mut buf = Vec::new();
     let mut out = HashMap::new();
 
@@ -82,23 +122,20 @@ pub fn parse_catalog<R: std::io::BufRead>(
                 stack.push(nome);
             }
             Ok(Event::Text(texto)) => {
-                let valor = texto.unescape().map(|v| v.to_string()).unwrap_or_default();
-                let atual = stack.last().map(String::as_str).unwrap_or("");
-                if let Some(component) = comp.as_mut() {
-                    match atual {
-                        "id" => component.id = valor,
-                        "summary" => {
-                            if component.summary.is_none() {
-                                component.summary = Some(valor);
-                            }
-                        }
-                        "pkgname" => pkgname = Some(valor),
-                        // Componentes sem <pkgname> (fontes, addons) costumam
-                        // declarar o RPM no <provides><binary>.
-                        "binary" if pkgname.is_none() => pkgname = Some(valor),
-                        "category" if in_categories => component.categories.push(valor),
-                        _ => {}
-                    }
+                let valor = texto
+                    .decode()
+                    .ok()
+                    .and_then(|valor| {
+                        quick_xml::escape::unescape(&valor)
+                            .ok()
+                            .map(|valor| valor.into_owned())
+                    })
+                    .unwrap_or_default();
+                aplica_texto(valor, &stack, &mut comp, &mut pkgname, in_categories);
+            }
+            Ok(Event::GeneralRef(referencia)) => {
+                if let Some(valor) = resolve_general_ref(referencia) {
+                    aplica_texto(valor, &stack, &mut comp, &mut pkgname, in_categories);
                 }
             }
             Ok(Event::End(e)) => {
@@ -188,6 +225,13 @@ mod tests {
     fn usa_provides_binary_quando_falta_pkgname() {
         let mapa = parse_catalog(Cursor::new(CATALOGO)).expect("parse");
         assert!(mapa.contains_key("example-fonts"));
+    }
+
+    #[test]
+    fn decodifica_entidades_no_texto() {
+        let xml = r#"<components><component><pkgname>pacote</pkgname><summary>A &amp; B &#x2D; C</summary></component></components>"#;
+        let mapa = parse_catalog(Cursor::new(xml)).expect("parse");
+        assert_eq!(mapa["pacote"].summary.as_deref(), Some("A & B - C"));
     }
 
     #[test]
