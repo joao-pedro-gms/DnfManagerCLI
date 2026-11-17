@@ -1,0 +1,118 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  RUST_TOOLCHAIN: "1.99.1"
+
+jobs:
+  # Reaproveita o mesmo gate do push/PR antes de publicar qualquer coisa.
+  check:
+    uses: ./.github/workflows/ci.yml
+
+  # O binário é compilado dentro do Fedora para casar a glibc do alvo e o RPM
+  # sair com o %{?dist} certo. Por isso ele não roda no runner Ubuntu.
+  rpm:
+    needs: check
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ferramentas de build e empacotamento
+        run: >
+          dnf install -y --setopt=install_weak_deps=False
+          cargo rust rpm-build rpmdevtools tar gzip python3 findutils
+
+      - name: versão do crate bate com a tag
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          crate=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -1)
+          echo "tag=$tag crate=$crate"
+          if [ "$tag" != "$crate" ]; then
+            echo "a tag v$tag não bate com a versão $crate do Cargo.toml" >&2
+            exit 1
+          fi
+
+      - name: compilar
+        run: cargo build --release --locked
+
+      - name: fumaça no binário
+        run: |
+          ./target/release/dnfm --version
+          ./target/release/dnfm --fake list -n 3
+
+      - name: ajustar o spec para a tag
+        run: >-
+          python3 packaging/bump_spec.py
+          "${GITHUB_REF_NAME#v}" "Release ${GITHUB_REF_NAME}"
+
+      - name: construir o RPM
+        run: |
+          set -euo pipefail
+          topdir="$PWD/rpmbuild"
+          mkdir -p "$topdir"/{SOURCES,SPECS,BUILD,RPMS,SRPMS}
+          cp target/release/dnfm packaging/dnfm.1 packaging/dnfm.bash \
+             packaging/dnfm.zsh packaging/dnfm.fish LICENSE "$topdir/SOURCES/"
+          cp packaging/dnfm.spec "$topdir/SPECS/"
+          rpmbuild -ba "$topdir/SPECS/dnfm.spec" --define "_topdir $topdir"
+          echo "--- conteúdo do pacote ---"
+          rpm -qlp "$topdir"/RPMS/*/*.rpm
+
+      - name: guardar o RPM
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm
+          path: rpmbuild/RPMS/**/*.rpm
+          if-no-files-found: error
+
+      - name: guardar o binário
+        uses: actions/upload-artifact@v4
+        with:
+          name: bin
+          path: target/release/dnfm
+          if-no-files-found: error
+
+  release:
+    needs: [check, rpm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bin
+          path: dist/bin
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: rpm
+          path: dist/rpm
+
+      - name: empacotar o tarball
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          stage="dist/dnfm-${version}"
+          mkdir -p "$stage"
+          cp dist/bin/dnfm "$stage/"
+          cp packaging/dnfm.1 packaging/dnfm.bash packaging/dnfm.zsh \
+             packaging/dnfm.fish LICENSE README.md "$stage/"
+          chmod +x "$stage/dnfm"
+          tar -czf "dist/dnfm-${version}-x86_64-linux.tar.gz" -C dist "dnfm-${version}"
+          ls -l dist dist/rpm/**/*.rpm
+
+      - name: publicar a release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/rpm/**/*.rpm
+            dist/*.tar.gz

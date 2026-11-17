@@ -241,6 +241,24 @@ cp packaging/dnfm.spec ~/rpmbuild/SPECS/
 rpmbuild -ba ~/rpmbuild/SPECS/dnfm.spec
 ```
 
+## CI e release
+
+- `.github/workflows/ci.yml` roda `cargo fmt --all --check`, `cargo clippy --workspace
+  --all-targets -- -D warnings` e `cargo test --workspace` em todo push e pull request.
+  O toolchain é fixado em `1.99.1` para que os gates não mudem sozinhos.
+- `.github/workflows/release.yml` dispara com uma tag `vX.Y.Z`. Ele reaproveita o job de
+  CI, confere se a tag bate com a versão do workspace, compila dentro do Fedora,
+  ajusta `packaging/dnfm.spec` com `packaging/bump_spec.py`, constrói o RPM e publica
+  uma release com o `.rpm` e o tarball do binário.
+
+```bash
+git tag v0.3.0
+git push origin v0.3.0
+```
+
+Para uma versão nova, suba antes o `version` de `[workspace.package]` no `Cargo.toml`
+e o cabeçalho do `packaging/dnfm.1`; o spec é ajustado pela tag.
+
 ## Licença
 
 MIT.

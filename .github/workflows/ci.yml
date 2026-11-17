@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  # Pino no mesmo toolchain usado no desenvolvimento: fmt e clippy -D warnings
+  # passam a ser determinísticos (um rustc novo pode trazer lints novos).
+  RUST_TOOLCHAIN: "1.99.1"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: formatação
+        run: cargo fmt --all --check
+      - name: lints
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: testes
+        run: cargo test --workspace

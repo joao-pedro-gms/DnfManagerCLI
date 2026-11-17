@@ -48,6 +48,9 @@ install -Dpm0644 %{SOURCE4} %{buildroot}%{_datadir}/fish/vendor_completions.d/dn
 %{_datadir}/fish/vendor_completions.d/dnfm.fish
 
 %changelog
+* Tue Nov 17 2026 Joao Pedro G. M. S. <joaopedrogms@users.noreply.github.com> - 0.3.0-1
+- Release v0.3.0
+
 * Fri Nov 13 2026 Joao Pedro G. M. S. <joaopedrogms@users.noreply.github.com> - 0.2.0-1
 - Categorias próprias, agrupamento por categoria/família/repo/motivo, sidebar
   com barras, chips de filtro, animações, temas e painel de filtros ampliado
