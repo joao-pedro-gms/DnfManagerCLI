@@ -158,6 +158,7 @@ impl DnfBackend for DbusBackend {
                         "nevra",
                         "requires",
                         "provides",
+                        "files",
                     ]),
                 ),
             ]))
@@ -166,7 +167,10 @@ impl DnfBackend for DbusBackend {
 
         // O grafo usa capabilities normalizadas: `libdrm(x86-64) = 2.4.124`
         // (provides) e `libdrm` (requires) são a mesma capability, e rich deps
-        // como `(libnotify or libnotify4)` valem como alternativas.
+        // como `(libnotify or libnotify4)` valem como alternativas. Requires
+        // de caminho absoluto (`/usr/bin/script`) nunca casam com provides de
+        // nome: são resolvidos pelos `files` dos instalados, pedidos na mesma
+        // chamada, para que o dono do arquivo fique fora da lista de órfãos.
         let records: Vec<InstalledRecord> = raw
             .iter()
             .filter(|attrs| !attrs.str_or("name", "").is_empty())
@@ -175,6 +179,7 @@ impl DnfBackend for DbusBackend {
                 reason: Reason::parse(&attrs.str_or("reason", "")),
                 provides: attrs.get_str_list("provides").unwrap_or_default(),
                 requires: attrs.get_str_list("requires").unwrap_or_default(),
+                files: attrs.get_str_list("files").unwrap_or_default(),
             })
             .collect();
         let required = capability::required_keys(&records);

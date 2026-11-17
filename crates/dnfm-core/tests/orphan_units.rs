@@ -3,10 +3,12 @@
 //! As strings abaixo foram capturadas de `Rpm.list` no `dnf5daemon-server`
 //! desta máquina (8.025 instalados, 312.207 provides, 126.395 requires), não
 //! são exemplos inventados: `mesa-vulkan-drivers` e `webkitgtk6.0` apareciam
-//! como órfãos justamente por causa do formato.
+//! como órfãos justamente por causa do formato. Os bloqueios de dependência
+//! de arquivo vêm do `rpm -e --test`: rpm recusa remover os sete porque
+//! outros pacotes exigem caminhos que eles possuem.
 
 use dnfm_core::capability::{
-    capability_name, is_orphan_reason, orphan_keys, required_keys, requirement_names,
+    capability_name, file_owners, is_orphan_reason, orphan_keys, required_keys, requirement_names,
     InstalledRecord,
 };
 use dnfm_core::model::Reason;
@@ -17,7 +19,20 @@ fn registro(key: &str, reason: Reason, provides: &[&str], requires: &[&str]) -> 
         reason,
         provides: provides.iter().map(|s| s.to_string()).collect(),
         requires: requires.iter().map(|s| s.to_string()).collect(),
+        files: Vec::new(),
     }
+}
+
+fn registro_com_arquivos(
+    key: &str,
+    reason: Reason,
+    provides: &[&str],
+    requires: &[&str],
+    files: &[&str],
+) -> InstalledRecord {
+    let mut record = registro(key, reason, provides, requires);
+    record.files = files.iter().map(|s| s.to_string()).collect();
+    record
 }
 
 #[test]
@@ -319,4 +334,241 @@ fn chaves_saem_sem_repeticao_e_em_ordem() {
         orphan_keys(&registros),
         vec!["a.noarch".to_string(), "b.x86_64".to_string()]
     );
+}
+
+#[test]
+fn require_de_arquivo_segura_o_dono_systemd_sysusers() {
+    // `rpm -e --test systemd-sysusers` falha: rpm-libs exige
+    // `/usr/bin/systemd-sysusers`, que é arquivo do pacote e não capability.
+    let registros = vec![
+        registro(
+            "zz-controle.x86_64",
+            Reason::Dependency,
+            &["zz-controle = 1-1.fc45"],
+            &["libc.so.6()(64bit)", "rpmlib(FileDigests) <= 4.6.0-1"],
+        ),
+        registro_com_arquivos(
+            "systemd-sysusers.x86_64",
+            Reason::Dependency,
+            &[
+                "systemd-sysusers = 262.1-1.fc45",
+                "systemd-sysusers(x86-64) = 262.1-1.fc45",
+            ],
+            &[
+                "rpmlib(FileDigests) <= 4.6.0-1",
+                "rpmlib(PayloadIsZstd) <= 5.4.18-1",
+            ],
+            &["/usr/bin/systemd-sysusers"],
+        ),
+        registro(
+            "rpm-libs.x86_64",
+            Reason::User,
+            &["rpm-libs = 6.1.0-1.fc45"],
+            &[
+                "/usr/bin/systemd-sysusers",
+                "rpmlib(FileDigests) <= 4.6.0-1",
+            ],
+        ),
+    ];
+
+    let requeridos = required_keys(&registros);
+    assert!(requeridos.contains("systemd-sysusers.x86_64"));
+    assert_eq!(orphan_keys(&registros), vec!["zz-controle.x86_64"]);
+}
+
+#[test]
+fn require_de_arquivo_segura_o_dono_do_script() {
+    // `rpm -e --test util-linux-script` falha: linuxtoys exige `/usr/bin/script`,
+    // também arquivo do pacote.
+    let registros = vec![
+        registro(
+            "zz-controle.x86_64",
+            Reason::Dependency,
+            &["zz-controle = 1-1.fc45"],
+            &["libc.so.6()(64bit)", "rpmlib(FileDigests) <= 4.6.0-1"],
+        ),
+        registro_com_arquivos(
+            "util-linux-script.x86_64",
+            Reason::Dependency,
+            &[
+                "util-linux-script = 2.42.4-1.fc45",
+                "util-linux-script(x86-64) = 2.42.4-1.fc45",
+            ],
+            &["rpmlib(PayloadIsZstd) <= 5.4.18-1"],
+            &[
+                "/usr/bin/script",
+                "/usr/bin/scriptlive",
+                "/usr/bin/scriptreplay",
+            ],
+        ),
+        registro(
+            "linuxtoys.x86_64",
+            Reason::User,
+            &["linuxtoys = 7.10.4-1"],
+            &["/usr/bin/bash", "/usr/bin/python3", "/usr/bin/script"],
+        ),
+    ];
+
+    let requeridos = required_keys(&registros);
+    assert!(requeridos.contains("util-linux-script.x86_64"));
+    assert_eq!(orphan_keys(&registros), vec!["zz-controle.x86_64"]);
+}
+
+#[test]
+fn require_de_arquivo_casa_so_com_o_caminho_exato() {
+    // moby-engine também exige `/bin/sh`; se o dono lista só `/usr/bin/sh`,
+    // o caminho não casa e o dono continua na lista de órfãos, como no rpm.
+    let registros = vec![
+        registro_com_arquivos(
+            "bash.x86_64",
+            Reason::Dependency,
+            &["bash = 5.3.3-1.fc45"],
+            &["libc.so.6()(64bit)", "rpmlib(FileDigests) <= 4.6.0-1"],
+            &["/usr/bin/sh", "/usr/bin/bash"],
+        ),
+        registro_com_arquivos(
+            "tini-static.x86_64",
+            Reason::Dependency,
+            &[
+                "tini-static = 0.19.0-12.fc44",
+                "tini-static(x86-64) = 0.19.0-12.fc44",
+            ],
+            &["rpmlib(FileDigests) <= 4.6.0-1"],
+            &["/usr/bin/tini-static"],
+        ),
+        registro(
+            "moby-engine.x86_64",
+            Reason::User,
+            &["moby-engine = 29.9.3-1.fc45"],
+            &[
+                "/bin/sh",
+                "/usr/bin/tini-static",
+                "rpmlib(FileDigests) <= 4.6.0-1",
+            ],
+        ),
+    ];
+
+    let requeridos = required_keys(&registros);
+    assert!(requeridos.contains("tini-static.x86_64"));
+    assert!(
+        !requeridos.contains("bash.x86_64"),
+        "/bin/sh não deve casar com /usr/bin/sh"
+    );
+    assert_eq!(orphan_keys(&registros), vec!["bash.x86_64".to_string()]);
+}
+
+#[test]
+fn provide_de_caminho_segura_quem_nao_e_dono_do_arquivo() {
+    // NetworkManager-libreswan exige `/usr/sbin/ipsec`; o pacote `libreswan`
+    // o oferece como provide virtual (não é arquivo dele, `rpm -ql` não
+    // lista) e `libreswan-minimal` possui o arquivo de verdade. Como no rpm,
+    // os dois têm que ficar fora da lista de órfãos.
+    let registros = vec![
+        registro(
+            "zz-controle.x86_64",
+            Reason::Dependency,
+            &["zz-controle = 1-1.fc45"],
+            &["libc.so.6()(64bit)", "rpmlib(FileDigests) <= 4.6.0-1"],
+        ),
+        registro(
+            "libreswan.x86_64",
+            Reason::Dependency,
+            &[
+                "/usr/sbin/ipsec",
+                "libreswan = 5.4.1-4.fc45",
+                "libreswan(x86-64) = 5.4.1-4.fc45",
+            ],
+            &["rpmlib(PayloadIsZstd) <= 5.4.18-1"],
+        ),
+        registro_com_arquivos(
+            "libreswan-minimal.x86_64",
+            Reason::Dependency,
+            &["libreswan-minimal = 5.4.1-4.fc45"],
+            &["rpmlib(PayloadIsZstd) <= 5.4.18-1"],
+            &["/usr/sbin/ipsec"],
+        ),
+        registro(
+            "networkmanager-libreswan.x86_64",
+            Reason::User,
+            &["networkmanager-libreswan = 1.2.30-4.fc45"],
+            &["/usr/sbin/ipsec", "rpmlib(FileDigests) <= 4.6.0-1"],
+        ),
+    ];
+
+    let requeridos = required_keys(&registros);
+    assert!(requeridos.contains("libreswan.x86_64"));
+    assert!(requeridos.contains("libreswan-minimal.x86_64"));
+    assert_eq!(orphan_keys(&registros), vec!["zz-controle.x86_64"]);
+}
+
+#[test]
+fn else_do_rich_dep_segura_a_alternativa() {
+    // `rpm -e --test zed-cli` falha: zed exige
+    // `(zed-cli-compat-zfs if zfs else zed-cli)` e `zfs` não está instalado.
+    // O braço do `else` era descartado e zed-cli sobrava como órfão.
+    let rich = "(zed-cli-compat-zfs if zfs else zed-cli)";
+    assert_eq!(
+        requirement_names(rich),
+        vec![
+            "zed-cli-compat-zfs".to_string(),
+            "zfs".to_string(),
+            "zed-cli".to_string()
+        ]
+    );
+
+    let registros = vec![
+        registro(
+            "zz-controle.x86_64",
+            Reason::Dependency,
+            &["zz-controle = 1-1.fc45"],
+            &["libc.so.6()(64bit)", "rpmlib(FileDigests) <= 4.6.0-1"],
+        ),
+        registro(
+            "zed-cli.x86_64",
+            Reason::Dependency,
+            &["zed-cli = 1.26.2-1.fc45", "zed-cli(x86-64) = 1.26.2-1.fc45"],
+            &["rpmlib(PayloadIsZstd) <= 5.4.18-1"],
+        ),
+        registro(
+            "zed.x86_64",
+            Reason::User,
+            &["zed = 1.26.2-1.fc45"],
+            &[rich, "rpmlib(FileDigests) <= 4.6.0-1"],
+        ),
+    ];
+
+    assert!(required_keys(&registros).contains("zed-cli.x86_64"));
+    assert_eq!(orphan_keys(&registros), vec!["zz-controle.x86_64"]);
+}
+
+#[test]
+fn dono_de_arquivo_ignora_entrada_invalida_e_barra_final() {
+    let registros = vec![
+        registro(
+            "vazio.x86_64",
+            Reason::Dependency,
+            &["vazio = 1-1.fc45"],
+            &[],
+        ),
+        registro_com_arquivos(
+            "a.x86_64",
+            Reason::Dependency,
+            &["a = 1-1.fc45"],
+            &[],
+            &["/etc/foo/", "usr/relativo", "   "],
+        ),
+        registro(
+            "usuario.noarch",
+            Reason::User,
+            &["usuario = 1-1.fc45"],
+            &["/etc/foo"],
+        ),
+    ];
+
+    let donos = file_owners(&registros);
+    assert_eq!(donos.get("/etc/foo"), Some(&vec!["a.x86_64".to_string()]));
+    assert!(!donos.contains_key("usr/relativo"));
+
+    assert!(required_keys(&registros).contains("a.x86_64"));
+    assert_eq!(orphan_keys(&registros), vec!["vazio.x86_64".to_string()]);
 }

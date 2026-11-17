@@ -4,10 +4,15 @@
 //! capability: `libdrm(x86-64) = 2.4.124-1.fc45` de um lado, `libdrm` ou
 //! `libdrm >= 2.4` do outro, além de rich deps como `(libnotify or libnotify4)`
 //! e das entradas `rpmlib(...)`, que só descrevem o próprio rpm. Comparar as
-//! strings cruas casava menos da metade dos requires (46,6% medidos no daemon),
+//! string cruas casava menos da metade dos requires (46,6% medidos no daemon),
 //! então a comparação é feita sobre o nome normalizado da capability.
+//!
+//! Além de capabilities, um require pode ser um caminho absoluto de arquivo
+//! (`/usr/bin/ruby`, `/usr/bin/systemd-sysusers`): esses nunca casam com
+//! provides de nome, então são resolvidos pelo mapa de donos de arquivo
+//! construído do atributo `files` dos pacotes instalados.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::model::Reason;
 
@@ -33,8 +38,8 @@ pub fn capability_name(raw: &str) -> Option<String> {
 
 /// Nomes exigidos por uma entrada de `requires`, sem repetição.
 ///
-/// Rich deps `(a or b)` e `(a if b)` viram alternativas: basta um dos nomes
-/// para o pacote que o oferece deixar de ser órfão.
+/// Rich deps `(a or b)`, `(a if b)` e `(a if b else c)` viram alternativas:
+/// basta um dos nomes para o pacote que o oferece deixar de ser órfão.
 pub fn requirement_names(raw: &str) -> Vec<String> {
     let mut nomes: Vec<String> = Vec::new();
     for nome in alternatives(raw).into_iter().filter_map(capability_name) {
@@ -92,9 +97,16 @@ fn split_operadores(inner: &str) -> Vec<&str> {
             b')' => profundeza -= 1,
             b' ' if profundeza == 0 => {
                 let resto = &inner[i..];
-                if resto.starts_with(" or ") || resto.starts_with(" if ") {
+                let pulo = if resto.starts_with(" or ") || resto.starts_with(" if ") {
+                    " or ".len()
+                } else if resto.starts_with(" else ") {
+                    " else ".len()
+                } else {
+                    0
+                };
+                if pulo > 0 {
                     partes.push(inner[inicio..i].trim());
-                    i += 4;
+                    i += pulo;
                     inicio = i;
                     continue;
                 }
@@ -126,6 +138,43 @@ impl ProviderIndex {
     }
 }
 
+/// Mapa `caminho absoluto` -> chaves (`nome.arch`) dos pacotes que possuem o
+/// arquivo, em ordem estável. Um caminho pode ter mais de um dono (arquivos
+/// compartilhados entre pacotes), e por conservadorismo todos seguram os seus.
+pub type FileOwners = HashMap<String, Vec<String>>;
+
+/// Constrói o mapa de donos de arquivo do atributo `files` dos registros.
+///
+/// Serve para resolver requires que são caminhos absolutos; caminhos que não
+/// são absolutos, vazios ou com `/` no fim (exceto a raiz) são descartados.
+pub fn file_owners(records: &[InstalledRecord]) -> FileOwners {
+    let mut owners: HashMap<String, BTreeSet<String>> = HashMap::new();
+    for record in records {
+        for caminho in &record.files {
+            if let Some(chave) = normaliza_caminho(caminho) {
+                owners.entry(chave).or_default().insert(record.key.clone());
+            }
+        }
+    }
+    owners
+        .into_iter()
+        .map(|(caminho, chaves)| (caminho, chaves.into_iter().collect()))
+        .collect()
+}
+
+/// Caminho utilizável como chave: absoluto e sem `/` no fim (exceto a raiz).
+fn normaliza_caminho(raw: &str) -> Option<String> {
+    let cru = raw.trim();
+    if cru.is_empty() || !cru.starts_with('/') {
+        return None;
+    }
+    let mut cru = cru;
+    while cru.len() > 1 && cru.ends_with('/') {
+        cru = &cru[..cru.len() - 1];
+    }
+    Some(cru.to_string())
+}
+
 /// Um pacote instalado, reduzido ao que decide se ele é órfão.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct InstalledRecord {
@@ -134,10 +183,33 @@ pub struct InstalledRecord {
     pub reason: Reason,
     pub provides: Vec<String>,
     pub requires: Vec<String>,
+    /// Caminhos absolutos dos arquivos do pacote; vazio quando a consulta não
+    /// pediu o atributo `files`, e aí requires de caminho ficam sem dono.
+    pub files: Vec<String>,
 }
 
 /// Chaves que algum outro pacote instalado requer.
+///
+/// Require de capability (`libdrm`, rich deps) casa com o índice de provides;
+/// require de caminho absoluto (`/usr/bin/ruby`) casa com o mapa de donos de
+/// arquivo e também com provide explícito do caminho (`/usr/sbin/ipsec` é
+/// provide virtual de `libreswan`, não arquivo dele). O dono fica requerido,
+/// não quem exige.
+/// Marca cada provedor como requerido, menos o próprio requisor.
+fn segurar<'a>(
+    donos: impl Iterator<Item = &'a String>,
+    record: &InstalledRecord,
+    required: &mut HashSet<String>,
+) {
+    for dono in donos {
+        if dono != &record.key {
+            required.insert(dono.clone());
+        }
+    }
+}
+
 pub fn required_keys(records: &[InstalledRecord]) -> HashSet<String> {
+    let owners = file_owners(records);
     let mut index = ProviderIndex::default();
     for record in records {
         index.add(&record.key, &record.provides);
@@ -146,15 +218,26 @@ pub fn required_keys(records: &[InstalledRecord]) -> HashSet<String> {
     let mut required = HashSet::new();
     for record in records {
         for raw in &record.requires {
+            if let Some(caminho) = normaliza_caminho(raw) {
+                segurar(
+                    owners.get(&caminho).into_iter().flatten(),
+                    record,
+                    &mut required,
+                );
+                // Dono virtual: provide explícito do caminho (`/usr/sbin/ipsec`).
+                segurar(
+                    index.providers.get(&caminho).into_iter().flatten(),
+                    record,
+                    &mut required,
+                );
+                continue;
+            }
             for nome in requirement_names(raw) {
-                let Some(donos) = index.providers.get(&nome) else {
-                    continue;
-                };
-                for dono in donos {
-                    if dono != &record.key {
-                        required.insert(dono.clone());
-                    }
-                }
+                segurar(
+                    index.providers.get(&nome).into_iter().flatten(),
+                    record,
+                    &mut required,
+                );
             }
         }
     }
