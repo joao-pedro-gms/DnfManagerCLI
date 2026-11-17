@@ -89,7 +89,13 @@ pub async fn list(backend: &Arc<dyn DnfBackend>, opts: ListOptions) -> i32 {
     }
     .apply(&packages);
     let limit = opts.limit.unwrap_or(usize::MAX);
+    let total = visible.len();
     let visible: Vec<usize> = visible.into_iter().take(limit).collect();
+    let contagem = if visible.len() == total {
+        format!("{total} pacotes")
+    } else {
+        format!("{} de {} pacotes", visible.len(), total)
+    };
 
     if opts.json {
         let items: Vec<serde_json::Value> = visible
@@ -104,7 +110,8 @@ pub async fn list(backend: &Arc<dyn DnfBackend>, opts: ListOptions) -> i32 {
             })
             .collect();
         let mut payload = serde_json::json!({
-            "total": visible.len(),
+            "total": total,
+            "returned": visible.len(),
             "packages": items,
         });
         if group_by != GroupMode::None {
@@ -129,7 +136,7 @@ pub async fn list(backend: &Arc<dyn DnfBackend>, opts: ListOptions) -> i32 {
     }
 
     if group_by == GroupMode::None {
-        println!("{} pacotes", visible.len());
+        println!("{contagem}");
         output::table(
             &output::PACKAGE_HEADERS,
             visible
@@ -146,8 +153,7 @@ pub async fn list(backend: &Arc<dyn DnfBackend>, opts: ListOptions) -> i32 {
         );
     } else {
         println!(
-            "{} pacotes em {} grupo(s), por {}",
-            visible.len(),
+            "{contagem} em {} grupo(s), por {}",
             group_rows(&packages, &visible, group_by, &taxonomy).len(),
             group_by.label()
         );
