@@ -398,3 +398,148 @@ fn tecla_i_abre_o_inspetor() {
         .iter()
         .any(|c| matches!(c, dnfm_tui::app::Cmd::LoadDetails(_))));
 }
+
+#[test]
+fn catalogo_appstream_vence_regra_curada() {
+    let mut app = App {
+        installed: vec![pkg("texlive-foo", 1024)],
+        ..Default::default()
+    };
+    app.rebuild_taxonomy();
+    assert_eq!(
+        app.category_label(&app.installed[0]),
+        "TeX Live",
+        "sem catálogo, a regra curada decide"
+    );
+
+    let mut catalogo = dnfm_core::TagCatalog::default();
+    catalogo.appstream.insert(
+        "texlive-foo".into(),
+        dnfm_core::metadata::AppStreamComponent {
+            id: "org.exemplo.Foo.desktop".into(),
+            categories: vec!["Graphics".into()],
+            summary: None,
+        },
+    );
+    app.apply_event(dnfm_tui::app::AppEvent::Metadata(Box::new(catalogo)));
+    assert_eq!(
+        app.category_label(&app.installed[0]),
+        "Gráficos",
+        "com catálogo, o AppStream vence a regra curada"
+    );
+}
+
+#[test]
+fn detalhes_de_outro_pacote_nao_aparecem() {
+    use dnfm_core::PackageDetails;
+
+    let mut app = populated();
+    app.loading = false;
+    app.details = Some(PackageDetails {
+        nevra: app.installed[0].nevra.clone(),
+        license: "MIT-FIRST".into(),
+        description: String::new(),
+        url: "https://example.org/primeiro".into(),
+        vendor: String::new(),
+        group: String::new(),
+    });
+
+    // Sobre o pacote selecionado, os detalhes aparecem e a dica some.
+    app.select(0);
+    let tela = render(&mut app, 120, 30);
+    assert!(
+        tela.contains("MIT-FIRST"),
+        "detalhes do selecionado aparecem"
+    );
+    assert!(!tela.contains("URL"), "sem dica quando os detalhes casam");
+
+    // Sobre o pacote seguinte, os detalhes antigos não vazam e a dica volta.
+    app.select(1);
+    let tela = render(&mut app, 120, 30);
+    assert!(
+        !tela.contains("MIT-FIRST"),
+        "detalhes do pacote anterior não aparecem"
+    );
+    assert!(
+        tela.contains("URL"),
+        "dica de detalhes aparece sem casamento"
+    );
+}
+
+#[test]
+fn clique_na_aba_troca_de_aba() {
+    use crossterm::event::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+    use dnfm_tui::app::Tab;
+
+    let mut app = populated();
+    app.loading = false;
+    let _ = render(&mut app, 140, 40);
+    let (rect, _) = app
+        .tab_hits
+        .iter()
+        .copied()
+        .find(|(_, tab)| *tab == Tab::Updates)
+        .expect("aba Atualizações clicável");
+    let clique = MouseEvent {
+        kind: MouseEventKind::Down(MouseButton::Left),
+        column: rect.x + rect.width / 2,
+        row: rect.y,
+        modifiers: KeyModifiers::NONE,
+    };
+    dnfm_tui::keys::handle_mouse(&mut app, clique);
+    assert_eq!(app.tab, Tab::Updates, "clique no rótulo troca de aba");
+}
+
+#[test]
+fn clique_no_cabecalho_ordena_pela_coluna() {
+    use crossterm::event::{KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+    use dnfm_core::SortKey;
+
+    let mut app = populated();
+    app.loading = false;
+    let _ = render(&mut app, 140, 40);
+    let area = app.table_area;
+    assert!(area.width > 0, "área da tabela registrada no desenho");
+
+    // Centro da coluna "tamanho" (62 células a partir da borda interna) ordena
+    // pelo tamanho; o cabeçalho é a primeira linha da área interna.
+    dnfm_tui::keys::handle_mouse(
+        &mut app,
+        MouseEvent {
+            kind: MouseEventKind::Down(MouseButton::Left),
+            column: area.x + 62,
+            row: area.y,
+            modifiers: KeyModifiers::NONE,
+        },
+    );
+    assert_eq!(app.sort, SortKey::Size, "coluna tamanho ordena por tamanho");
+
+    // Centro da coluna "nome" (16 células) ordena pelo nome.
+    dnfm_tui::keys::handle_mouse(
+        &mut app,
+        MouseEvent {
+            kind: MouseEventKind::Down(MouseButton::Left),
+            column: area.x + 16,
+            row: area.y,
+            modifiers: KeyModifiers::NONE,
+        },
+    );
+    assert_eq!(app.sort, SortKey::Name, "coluna nome ordena pelo nome");
+
+    // Coluna "versão" (centro 37) não ordena e não cicla.
+    app.sort = SortKey::Size;
+    dnfm_tui::keys::handle_mouse(
+        &mut app,
+        MouseEvent {
+            kind: MouseEventKind::Down(MouseButton::Left),
+            column: area.x + 37,
+            row: area.y,
+            modifiers: KeyModifiers::NONE,
+        },
+    );
+    assert_eq!(
+        app.sort,
+        SortKey::Size,
+        "coluna versão não ordena nem cicla"
+    );
+}

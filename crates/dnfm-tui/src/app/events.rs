@@ -80,10 +80,19 @@ impl App {
                 None
             }
             AppEvent::Details(details) => {
+                // Só guarda quando o nevra casa com o pacote correspondente;
+                // resposta atrasada de outro pacote é descartada.
                 if let Some(inspection) = self.inspection.as_mut() {
-                    inspection.details = Some(details.clone());
+                    if inspection.package.nevra == details.nevra {
+                        inspection.details = Some(details.clone());
+                    }
                 }
-                self.details = Some(details);
+                let casado = self
+                    .current_package()
+                    .is_some_and(|pkg| pkg.nevra == details.nevra);
+                if casado {
+                    self.details = Some(details);
+                }
                 None
             }
             AppEvent::Preview(preview) => {

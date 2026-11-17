@@ -331,8 +331,15 @@ impl App {
     }
 
     pub fn rebuild_taxonomy(&mut self) {
-        self.taxonomy =
-            dnfm_core::categories::Taxonomy::build(&self.installed, &self.custom_categories);
+        self.taxonomy = if self.catalog.is_empty() {
+            dnfm_core::categories::Taxonomy::build(&self.installed, &self.custom_categories)
+        } else {
+            dnfm_core::categories::Taxonomy::build_with(
+                &self.installed,
+                &self.custom_categories,
+                Some(&self.catalog),
+            )
+        };
         self.refresh();
     }
 

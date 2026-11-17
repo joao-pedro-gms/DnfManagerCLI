@@ -346,14 +346,9 @@ pub fn handle_mouse(app: &mut App, mouse: MouseEvent) -> Vec<Cmd> {
 
     match mouse.kind {
         MouseEventKind::Moved => {
-            app.hover = if inside_table {
-                let header_y = area.y + 1;
-                if y > header_y {
-                    let row = (y - header_y - 1) as usize + app.scroll;
-                    (row < app.rows_len()).then_some(row)
-                } else {
-                    None
-                }
+            app.hover = if inside_table && y > area.y {
+                let row = (y - area.y - 1) as usize + app.scroll;
+                (row < app.rows_len()).then_some(row)
             } else {
                 None
             };
@@ -389,30 +384,31 @@ pub fn handle_mouse(app: &mut App, mouse: MouseEvent) -> Vec<Cmd> {
                 return Vec::new();
             }
 
-            // Abas (primeira linha do cabeçalho).
-            if y <= 2 {
-                let offset = (x as usize).saturating_sub(area.x as usize + 2);
-                if let Some(tab) = Tab::ALL.get(offset / 18) {
-                    app.switch_tab(*tab);
-                }
+            // Abas: retângulos registrados pelo desenho do cabeçalho.
+            if let Some((_, tab)) = app
+                .tab_hits
+                .iter()
+                .find(|(rect, _)| hit(*rect, x, y))
+                .cloned()
+            {
+                app.switch_tab(tab);
                 return Vec::new();
             }
             if !inside_table {
                 return Vec::new();
             }
-            let header_y = area.y + 1;
-            if y == header_y {
-                app.sort = match (x - area.x) / 18 {
-                    1 => dnfm_core::SortKey::Name,
-                    2 => dnfm_core::SortKey::Size,
-                    3 => dnfm_core::SortKey::Repo,
-                    4 => dnfm_core::SortKey::Category,
-                    _ => app.sort.next(),
-                };
-                app.refresh();
+            // Cabeçalho da tabela: a ratatui desenha os títulos na primeira
+            // linha da área interna.
+            if y == area.y {
+                if let Some((_, Some(chave))) =
+                    crate::ui::header_sort_at(app.tab, area.width, x.saturating_sub(area.x))
+                {
+                    app.sort = chave;
+                    app.refresh();
+                }
                 return Vec::new();
             }
-            let row = (y - header_y - 1) as usize + app.scroll;
+            let row = (y - area.y - 1) as usize + app.scroll;
             if row >= app.rows_len() {
                 return Vec::new();
             }

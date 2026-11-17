@@ -29,11 +29,12 @@ impl App {
     /// Abre o inspetor do pacote sob o cursor e pede os detalhes que faltam.
     pub fn open_inspector(&mut self) -> Option<Cmd> {
         let pkg = self.current_package().cloned()?;
+        let details = self.details.clone().filter(|d| d.nevra == pkg.nevra);
         self.inspection = Some(Inspection {
             categories: self.catalog.category_for(&pkg).into_iter().collect(),
             tags: self.catalog.tags_for(&pkg),
             files: self.catalog.file_info(&pkg.name).cloned(),
-            details: self.details.clone(),
+            details,
             package: pkg.clone(),
         });
         self.open_modal(Modal::Inspector);

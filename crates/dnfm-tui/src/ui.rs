@@ -3,7 +3,7 @@
 //! Só lê o estado; nenhuma decisão vive aqui. O tema e o animador vêm do `App`,
 //! então a mesma função desenha qualquer paleta em qualquer quadro.
 
-use dnfm_core::{format_date, format_size, Reason};
+use dnfm_core::{format_date, format_size, Reason, SortKey};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
@@ -136,7 +136,7 @@ fn draw_table(frame: &mut Frame, app: &mut App, area: Rect) {
             ),
         )
         .row_highlight_style(theme.row_highlight())
-        .highlight_symbol("▸ ");
+        .highlight_symbol(SIMBOLO_SELECAO);
     frame.render_stateful_widget(table, inner, &mut state);
 }
 
@@ -202,6 +202,56 @@ fn table_layout(tab: Tab) -> (Vec<&'static str>, Vec<Constraint>) {
             ],
         ),
     }
+}
+
+/// Largura da coluna reservada ao símbolo da linha selecionada na tabela.
+const SIMBOLO_SELECAO: &str = "▸ ";
+
+/// Coluna clicada no cabeçalho da tabela: resolve as mesmas larguras de
+/// [`table_layout`] do mesmo jeito que o ratatui resolve (coluna de seleção
+/// à esquerda e uma célula de espaçamento entre colunas) e devolve o índice
+/// da coluna sob `offset` (`x - área.x`) com a chave de ordenação dela.
+/// `None` quando o clique cai fora das colunas ou nelas não há chave natural.
+pub fn header_sort_at(tab: Tab, largura: u16, offset: u16) -> Option<(usize, Option<SortKey>)> {
+    let (_, widths) = table_layout(tab);
+    if widths.is_empty() || offset >= largura {
+        return None;
+    }
+    let selecao = SIMBOLO_SELECAO.chars().count() as u16;
+    let [_, area_colunas] = Layout::horizontal([Constraint::Length(selecao), Constraint::Fill(0)])
+        .areas(Rect {
+            width: largura,
+            height: 1,
+            ..Rect::default()
+        });
+    let colunas = Layout::horizontal(widths)
+        .flex(ratatui::layout::Flex::Start)
+        .spacing(1)
+        .split(area_colunas);
+    let indice = colunas
+        .iter()
+        .position(|col| offset >= col.x && offset < col.x + col.width)?;
+    Some((indice, chave_da_coluna(tab, indice)))
+}
+
+/// Chave de ordenação de cada coluna da tabela, por aba; colunas que não
+/// aparecem na lista (símbolo, versão, abas sem tabela) não ordenam.
+fn chave_da_coluna(tab: Tab, indice: usize) -> Option<SortKey> {
+    let chaves: &[Option<SortKey>] = match tab {
+        Tab::Installed | Tab::Orphans => &[
+            None,
+            Some(SortKey::Name),
+            None,
+            Some(SortKey::Repo),
+            Some(SortKey::Size),
+            Some(SortKey::Date),
+            Some(SortKey::Category),
+            Some(SortKey::Reason),
+        ],
+        Tab::Updates => &[None, Some(SortKey::Name), None, None, None, None],
+        _ => &[],
+    };
+    chaves.get(indice).copied().flatten()
 }
 
 fn build_row(app: &App, idx: usize, theme: &Theme) -> Row<'static> {
@@ -388,13 +438,14 @@ fn draw_details(frame: &mut Frame, app: &App, area: Rect) {
             pkg.summary.clone(),
             Style::default().fg(theme.text),
         )]));
-        if app.details.is_none() {
+        let detalhes = app.details.as_ref().filter(|d| d.nevra == pkg.nevra);
+        if detalhes.is_none() {
             lines.push(Line::from(Span::styled(
                 "enter: descrição, licença e URL",
                 Style::default().fg(theme.dim),
             )));
         }
-        if let Some(details) = &app.details {
+        if let Some(details) = detalhes {
             if !details.description.is_empty() {
                 let desc: String = details
                     .description

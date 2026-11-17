@@ -43,6 +43,8 @@ async fn desenha_os_pacotes_reais_agrupados_por_categoria() {
 
     app.group = GroupMode::Category;
     app.rebuild_rows();
+    // Mesma linha que `cycle_group` escreve ao trocar o agrupamento.
+    app.status = format!("agrupado por {}", app.group.label());
     let screen = render(&mut app, 160, 50);
     println!(
         "categorias: {} · linhas: {}",
@@ -82,5 +84,5 @@ async fn desenha_os_pacotes_reais_agrupados_por_categoria() {
         "o filtro deve casar a contagem do grupo"
     );
     let screen = render(&mut app, 160, 50);
-    assert!(screen.contains("filtros(1)"));
+    assert!(screen.contains("filtros: 1"));
 }

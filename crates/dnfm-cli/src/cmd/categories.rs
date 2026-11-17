@@ -36,7 +36,10 @@ pub async fn categories(backend: &Arc<dyn DnfBackend>, opts: CategoriesOptions) 
 
     match opts.action {
         CategoryAction::List => {
-            let taxonomy = Taxonomy::build(&installed, &custom);
+            let taxonomy = match super::load_catalog(backend, &installed).await.ok() {
+                Some(catalog) => Taxonomy::build_with(&installed, &custom, Some(&catalog)),
+                None => Taxonomy::build(&installed, &custom),
+            };
             let mut items: Vec<&dnfm_core::categories::CategoryInfo> =
                 taxonomy.categories().iter().collect();
             items.sort_by(|a, b| b.count.cmp(&a.count).then_with(|| a.label.cmp(&b.label)));
