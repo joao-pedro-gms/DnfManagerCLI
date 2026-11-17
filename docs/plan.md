@@ -193,7 +193,7 @@ Aplicar usa `Rpm.upgrade(nevras)` + mesmo pipeline de preview/execute — o prev
 
 - **Histórico**: `History.list { since, limit }` + `recent_changes` para o diff de uma transação.
 - **Repos**: `Rpm.Repo.list`, `enable/disable` (exigem polkit), exibindo contagem de pacotes por repo.
-- **Órfãos**: o daemon não expõe "leaves". Calcular localmente: pedir `requires` de todos os instalados (`Rpm.list` com `package_attrs=["requires"]`), montar grafo reverso e listar pacotes cujo `reason == User` e nenhum outro pacote instalado os requer. Cache em memória por sessão.
+- **Órfãos**: o daemon não expõe "leaves". Calcular localmente: pedir `requires`, `provides` e `files` de todos os instalados na mesma chamada `Rpm.list`, normalizar as capabilities (token antes de espaço, parêntese ou operador; rich deps `(a or b)`, `(a if b)` e `(a if b else c)` viram alternativas) e resolver requires que começam com `/` pelo dono do caminho em `files` ou por provide explícito do caminho. Com o grafo reverso montado, listar pacotes com `reason` de dependência (`Dependency` ou `WeakDependency`) que nenhum outro instalado requer, em ordem de tamanho decrescente. Protegidos ficam fora da lista e entram na contagem `protected_skipped`. A chamada com `files` custa cerca de 20 s (sem `files` eram ~16 s); cache em memória por sessão.
 
 ---
 
@@ -218,7 +218,10 @@ Dinâmicas:
 - kernel em execução (`kernel-$(uname -r)`) é protegido.
 - `result == 2` do solver **sempre** bloqueia a execução — a rede de segurança real, porque o solver conhece requisitos que a blocklist não.
 - nunca aplicar sem preview; nunca `--yes` implícito (o CLI exige `--yes` explícito e recusa se houver problemas).
-- escrita de `marks.json` atômica (tmp + `fsync` + `rename`) com `flock`.
+- escrita de `marks.json` atômica (tmp + `fsync` + `rename`). Não há `flock`
+  nem outro lock entre processos: se duas instâncias gravarem ao mesmo tempo,
+  a última vence. Limitação registrada; na prática a escrita só acontece na
+  instância aberta.
 
 ---
 
@@ -267,7 +270,7 @@ dnfm history [--limit N] [--json]
 `remove` sem `--yes` imprime o preview (mesma tabela agrupada por motivo) e sai
 com código 2 se houver problemas. Códigos: `0` ok, `1` erro, `2` problemas de
 resolução, `3` autenticação negada, `4` daemon indisponível. `--json` emite
-schema estável (`schema_version: 1`).
+schema estável (`schema_version: 2`).
 
 ---
 
@@ -341,9 +344,9 @@ Todos os marcos M0–M5 foram entregues, com três desvios conscientes.
 | Blocklist de essenciais + bloqueio por `result == 2` | ✅ |
 | Aba de atualizações com severidade/advisory, seleção e aplicação | ✅ |
 | Histórico, repos, órfãos (grafo reverso de `requires` em memória) | ✅ |
-| CLI com `--json` estável (`schema_version: 1`), códigos de saída 0–4 | ✅ |
+| CLI com `--json` estável (`schema_version: 2`), códigos de saída 0–4 | ✅ |
 | man page, completions (bash/zsh/fish), spec RPM e RPM construído | ✅ |
-| Testes: 46 (26 core, 14 TUI, 6 de render) + 6 de integração `#[ignore]` | ✅ |
+| Testes: 172 medidos nesta rodada (94 core, 71 TUI, 7 CLI) + 7 de integração `#[ignore]` | ✅ |
 
 Desvios em relação ao plano:
 
@@ -400,8 +403,8 @@ Três camadas, da mais forte para a mais fraca:
 
 ### Evidências
 
-- 76 testes automatizados (38 core, 5 modelo, 8 lógica da TUI, 13 teclado,
-  12 renderização) + 7 de integração `#[ignore]` (6 D-Bus + 1 render real).
+- 172 testes automatizados medidos nesta rodada (94 core, 71 TUI, 7 CLI) +
+  7 de integração `#[ignore]` (6 D-Bus + 1 render real).
 - Teste de render com dados reais: 8.009 instalados → 30 categorias → 8.039
   linhas (pacotes + cabeçalhos), maiores grupos TeX Live (4.787), Outros
   (1.217), Bibliotecas (744); filtro por categoria casa exatamente a contagem
@@ -448,9 +451,8 @@ agrupamentos e filtros.
 
 ### Evidências
 
-- 100 testes (antes 76): 18 de renderização (sidebar, chips, colagem, tema,
-  animação), 13 de teclado, 13 de unidade da TUI (animação, tema, sidebar,
-  geometria de modal), 38 de core, 5 de modelo, 8 de lógica.
+- 172 testes medidos nesta rodada (antes 100): 94 core, 71 TUI (unidade,
+  lógica de app, teclado e renderização) e 7 CLI.
 - Ferramenta de inspeção visual: `cargo run -p dnfm-tui --example snapshot`
  gera o buffer com cores e `scripts/snapshot_to_html.py` converte em HTML —
   usado para revisar o layout quadro a quadro durante o desenvolvimento.
@@ -503,7 +505,7 @@ NEVRA instalados + mtime do catálogo. Primeira execução: 8,2 s; com cache: 3,
   `enter`/`i` (metadados, categorias/tags com origem, arquivos, estado),
   `r` na aba Estatísticas força recálculo dos metadados.
 - CLI: `stats`, `inspect <alvo>`, `tags`, todos com `--json` no envelope
-  `schema_version: 1`.
+  `schema_version: 2`.
 - `list --category/--family` carrega o catálogo sob demanda (só quando filtra).
 
 ### Verificação real (8.009 pacotes)

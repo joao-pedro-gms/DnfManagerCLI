@@ -1,4 +1,4 @@
-.TH DNFM 1 "2026-11-13" "dnfm 0.2.0" "Comandos do usuário"
+.TH DNFM 1 "2026-11-17" "dnfm 0.3.0" "Comandos do usuário"
 .SH NOME
 dnfm \- gerenciador de pacotes DNF5 com interface de terminal e linha de comando
 .SH SINOPSE
@@ -21,7 +21,9 @@ Abre a interface de terminal (padrão quando nenhum subcomando é dado).
 .B list
 Lista pacotes instalados. Opções: \fB-p/--pattern\fR, \fB-r/--repo\fR,
 \fB-s/--sort\fR (name, size, date, repo, reason), \fB-n/--limit\fR,
-\fB--json\fR.
+\fB--json\fR. Em \fB--json\fR, a resposta informa \fItotal\fR (pacotes
+casados) e \fIreturned\fR (impressos após o limite) ao lado de
+\fIpackages\fR.
 .TP
 .B updates
 Mostra atualizações disponíveis com versão instalada, versão nova, severidade
@@ -42,7 +44,14 @@ apenas exibe a prévia. Opções: \fB--from-marks\fR, \fB--dry-run\fR,
 Histórico de transações do DNF. Opções: \fB-l/--limit\fR, \fB--json\fR.
 .TP
 .B orphans
-Pacotes instalados como dependência que nenhum outro pacote requer.
+Pacotes instalados como dependência que nenhum outro pacote requer. O grafo
+é montado localmente com \\fBrequires\\fR, \\fBprovides\\fR e a lista de
+arquivos dos instalados: dependências de arquivo (\\fI/usr/bin/ruby\\fR) e
+rich deps como \\fI(a if b else c)\\fR seguram os provedores. Pacotes
+protegidos ficam de fora e aparecem na contagem \\fIprotected_skipped\\fR. Em
+\\fB--json\\fR, o resultado é um objeto com \\fIcount\\fR,
+\\fIprotected_skipped\\fR e \\fIpackages\\fR. A consulta pede os arquivos ao
+daemon e leva cerca de 20 segundos.
 .TP
 .B repos
 Repositórios configurados e seu estado.
@@ -73,7 +82,8 @@ Sucesso.
 Erro.
 .TP
 .B 2
-Problemas de resolução; nada foi executado.
+Problemas de resolução ou tentativa de remover pacote protegido; nada foi
+executado.
 .TP
 .B 3
 Autenticação negada pelo polkit.
@@ -91,9 +101,10 @@ Marcações de remoção (padrão: \fI~/.local/state/dnfm/marks.json\fR). Grava�
 atômica; arquivo corrompido é preservado como \fImarks.json.corrupt\fR.
 .SH SEGURANÇA
 Pacotes essenciais (\fBdnf5\fR, \fBglibc\fR, \fBsystemd\fR, kernel, \fBsudo\fR,
-entre outros) não podem ser marcados. Além disso, nenhuma transação é executada
-quando o resolvedor do DNF reporta problemas, o que cobre dependências que a
-lista estática não conhece.
+entre outros) não podem ser marcados, e a remoção deles é recusada com código
+de saída 2 antes de qualquer prévia, tanto pela CLI quanto pela TUI. Além
+disso, nenhuma transação é executada quando o resolvedor do DNF reporta
+problemas, o que cobre dependências que a lista estática não conhece.
 .SH EXEMPLOS
 .PP
 .nf

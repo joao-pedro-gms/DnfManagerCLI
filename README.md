@@ -30,7 +30,7 @@ ferramenta gráfica do sistema.
 
 ```bash
 # a partir do RPM gerado
-sudo dnf install ./dnfm-0.1.0-1.fc45.x86_64.rpm
+sudo dnf install ./dnfm-0.3.0-1.fc45.x86_64.rpm
 
 # ou direto do código
 cargo build --release
@@ -63,6 +63,18 @@ dnfm list --category "TeX Live" --sort size
 dnfm list --group-by category --with-updates
 dnfm list --arch noarch --min-size 10M --group-by family
 ```
+
+`dnfm orphans` monta o grafo de dependências localmente a partir dos
+`requires`, `provides` e arquivos de cada pacote instalado: uma dependência
+de arquivo (`/usr/bin/ruby`) segura quem é dono do caminho, e rich deps como
+`(a if b else c)` contam todas as alternativas. Pacotes protegidos ficam
+fora da lista e a contagem aparece como `N protegidos ignorados`. Como a
+consulta pede a lista de arquivos ao daemon, leva cerca de 20 s.
+
+Em `--json`, `orphans` devolve um objeto com `count`, `protected_skipped` e
+`packages` (não mais uma lista), e `list` informa `total` (pacotes casados)
+e `returned` (impressos após o `--limit`). Todos os comandos em JSON usam o
+mesmo envelope com `schema_version: 2`.
 
 ### Teclas
 
@@ -183,7 +195,9 @@ família, arquitetura.
   `Preview::confirm()`, então não existe caminho de código que execute uma
   transação sem ter passado por um preview aprovado.
 - **Blocklist de essenciais.** `dnf5`, `glibc`, `systemd`, kernel, `sudo`,
-  `rpm`, `polkit`, `grub2`, `dracut` e afins não podem ser marcados.
+  `rpm`, `polkit`, `grub2`, `dracut` e afins não podem ser marcados nem
+  removidos: `dnfm remove` recusa com código 2 antes de qualquer preview e a
+  TUI recusa o preview do protegido com o motivo no status.
 - **O resolvedor é a rede final.** Se o DNF reportar qualquer problema de
   resolução, a execução é recusada — cobre dependências que a lista estática
   não conhece.
@@ -206,7 +220,7 @@ negado, resolução bloqueada, scriptlet falhando).
 ## Desenvolvimento
 
 ```bash
-cargo test --workspace            # 46 testes, sem tocar no sistema
+cargo test --workspace            # 172 testes, sem tocar no sistema
 cargo clippy --workspace -- -D warnings
 cargo fmt --check
 
