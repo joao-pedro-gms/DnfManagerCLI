@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     container: fedora:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: ferramentas de build e empacotamento
         run: >
@@ -66,14 +66,14 @@ jobs:
           rpm -qlp "$topdir"/RPMS/*/*.rpm
 
       - name: guardar o RPM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rpm
           path: rpmbuild/RPMS/**/*.rpm
           if-no-files-found: error
 
       - name: guardar o binário
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bin
           path: target/release/dnfm
@@ -83,14 +83,14 @@ jobs:
     needs: [check, rpm]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: bin
           path: dist/bin
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: rpm
           path: dist/rpm
@@ -109,7 +109,7 @@ jobs:
           ls -l dist dist/rpm/**/*.rpm
 
       - name: publicar a release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           fail_on_unmatched_files: true
