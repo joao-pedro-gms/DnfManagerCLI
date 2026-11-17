@@ -240,6 +240,9 @@ async fn main() {
 
 async fn run() -> i32 {
     let cli = Cli::parse();
+    if cli.fake {
+        isolate_fake_state();
+    }
 
     match cli.command {
         None | Some(Command::Tui) => run_tui(cli.fake).await,
@@ -427,6 +430,18 @@ fn parse_size(raw: &str) -> Result<u64, String> {
         .parse()
         .map_err(|_| format!("tamanho inválido: {raw}"))?;
     Ok((value * multiplier as f64) as u64)
+}
+
+/// Mantém o modo de demonstração longe do estado e do cache reais do usuário.
+/// Um `DNFM_STATE_HOME` já definido (testes) vence e não é aninhado.
+fn isolate_fake_state() {
+    if std::env::var_os("DNFM_STATE_HOME").is_some() {
+        return;
+    }
+    let state = dnfm_core::paths::state_dir().join("fake");
+    let cache = dnfm_core::paths::cache_dir().join("fake");
+    std::env::set_var("DNFM_STATE_HOME", state);
+    std::env::set_var("DNFM_CACHE_HOME", cache);
 }
 
 async fn connect(fake: bool) -> Result<Arc<dyn DnfBackend>, dnfm_core::BackendError> {

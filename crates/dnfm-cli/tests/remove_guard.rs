@@ -60,9 +60,10 @@ fn remove_comum_com_dry_run_continua_em_zero() {
 fn remove_de_marcas_com_protegido_recusa() {
     let dir = base("marcas");
     // Marcação que escapou do bloqueio (arquivo editado à mão).
-    fs::create_dir_all(dir.join("state/dnfm")).expect("criar dir de estado");
+    // Em `--fake` o estado vive no subdiretório `fake`.
+    fs::create_dir_all(dir.join("state/dnfm/fake")).expect("criar dir de estado");
     fs::write(
-        dir.join("state/dnfm/marks.json"),
+        dir.join("state/dnfm/fake/marks.json"),
         r#"{
   "version": 1,
   "marks": [
@@ -79,4 +80,20 @@ fn remove_de_marcas_com_protegido_recusa() {
         "falta a recusa do protegido das marcas: {stderr}"
     );
     assert!(stdout.is_empty(), "stdout: {stdout}");
+}
+
+#[test]
+fn modo_fake_nao_grava_no_estado_real() {
+    let dir = base("isolado");
+    let (codigo, stdout, stderr) = dnfm(&dir, &["--fake", "marks", "add", "firefox"]);
+    assert_eq!(codigo, 0, "stderr: {stderr}");
+    assert!(stdout.contains("marcados"), "stdout: {stdout}");
+    assert!(
+        dir.join("state/dnfm/fake/marks.json").exists(),
+        "o modo fake deveria gravar no subdiretório fake"
+    );
+    assert!(
+        !dir.join("state/dnfm/marks.json").exists(),
+        "o modo fake não pode tocar o marks.json real"
+    );
 }

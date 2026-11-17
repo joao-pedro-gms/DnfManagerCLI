@@ -4,7 +4,13 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 
 /// `$XDG_STATE_HOME/dnfm`, com fallback para `~/.local/state/dnfm`.
+///
+/// `DNFM_STATE_HOME` tem prioridade e aponta o diretório final, sem o sufixo
+/// `dnfm`: é o que mantém o modo `--fake` longe do estado real.
 pub fn state_dir() -> PathBuf {
+    if let Some(dir) = std::env::var_os("DNFM_STATE_HOME") {
+        return PathBuf::from(dir);
+    }
     state_dir_from(std::env::var_os("XDG_STATE_HOME"))
 }
 
@@ -17,7 +23,13 @@ fn state_dir_from(xdg: Option<OsString>) -> PathBuf {
 }
 
 /// `$XDG_CACHE_HOME/dnfm`, com fallback para `~/.cache/dnfm`.
+///
+/// `DNFM_CACHE_HOME` tem prioridade e aponta o diretório final, sem o sufixo
+/// `dnfm`.
 pub fn cache_dir() -> PathBuf {
+    if let Some(dir) = std::env::var_os("DNFM_CACHE_HOME") {
+        return PathBuf::from(dir);
+    }
     cache_dir_from(std::env::var_os("XDG_CACHE_HOME"))
 }
 

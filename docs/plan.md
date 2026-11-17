@@ -346,7 +346,7 @@ Todos os marcos M0–M5 foram entregues, com três desvios conscientes.
 | Histórico, repos, órfãos (grafo reverso de `requires` em memória) | ✅ |
 | CLI com `--json` estável (`schema_version: 2`), códigos de saída 0–4 | ✅ |
 | man page, completions (bash/zsh/fish), spec RPM e RPM construído | ✅ |
-| Testes: 172 medidos nesta rodada (94 core, 71 TUI, 7 CLI) + 7 de integração `#[ignore]` | ✅ |
+| Testes: 173 medidos nesta rodada (94 core, 71 TUI, 8 CLI) + 7 de integração `#[ignore]` | ✅ |
 
 Desvios em relação ao plano:
 
@@ -403,7 +403,7 @@ Três camadas, da mais forte para a mais fraca:
 
 ### Evidências
 
-- 172 testes automatizados medidos nesta rodada (94 core, 71 TUI, 7 CLI) +
+- 173 testes automatizados medidos nesta rodada (94 core, 71 TUI, 8 CLI) +
   7 de integração `#[ignore]` (6 D-Bus + 1 render real).
 - Teste de render com dados reais: 8.009 instalados → 30 categorias → 8.039
   linhas (pacotes + cabeçalhos), maiores grupos TeX Live (4.787), Outros
@@ -451,7 +451,7 @@ agrupamentos e filtros.
 
 ### Evidências
 
-- 172 testes medidos nesta rodada (antes 100): 94 core, 71 TUI (unidade,
+- 173 testes medidos nesta rodada (antes 100): 94 core, 71 TUI (unidade,
   lógica de app, teclado e renderização) e 7 CLI.
 - Ferramenta de inspeção visual: `cargo run -p dnfm-tui --example snapshot`
  gera o buffer com cores e `scripts/snapshot_to_html.py` converte em HTML —

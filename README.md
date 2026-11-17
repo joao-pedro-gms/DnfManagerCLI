@@ -220,7 +220,7 @@ negado, resolução bloqueada, scriptlet falhando).
 ## Desenvolvimento
 
 ```bash
-cargo test --workspace            # 172 testes, sem tocar no sistema
+cargo test --workspace            # 173 testes, sem tocar no sistema
 cargo clippy --workspace -- -D warnings
 cargo fmt --check
 
