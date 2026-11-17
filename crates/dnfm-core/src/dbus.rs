@@ -239,7 +239,7 @@ impl DbusBackend {
                     advisory,
                 }
             })
-            .buffer_unordered(8)
+            .buffered(8)
             .collect()
             .await;
         Ok(out)

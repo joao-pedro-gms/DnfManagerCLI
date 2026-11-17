@@ -430,6 +430,24 @@ pub fn format_date(unix: i64) -> String {
     format!("{year:04}-{month:02}-{day:02}")
 }
 
+/// Início do ano civil em que cai o timestamp Unix (UTC).
+pub fn year_start(unix: i64) -> i64 {
+    let days = unix.div_euclid(86_400);
+    let (year, _, _) = civil_from_days(days);
+    days_from_civil(year, 1, 1) * 86_400
+}
+
+/// Algoritmo de Howard Hinnant: data civil -> dias desde 1970.
+fn days_from_civil(year: i64, month: u32, day: u32) -> i64 {
+    let year = year - i64::from(month <= 2);
+    let era = if year >= 0 { year } else { year - 399 } / 400;
+    let year_of_era = year - era * 400;
+    let month = i64::from(month);
+    let day_of_year = (153 * (month + if month > 2 { -3 } else { 9 }) + 2) / 5 + i64::from(day) - 1;
+    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
+    era * 146_097 + day_of_era - 719_468
+}
+
 /// Algoritmo de Howard Hinnant: dias desde 1970 -> (ano, mês, dia).
 fn civil_from_days(days: i64) -> (i64, u32, u32) {
     let z = days + 719_468;

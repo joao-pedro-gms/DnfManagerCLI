@@ -165,7 +165,9 @@ impl Stats {
                 size: 0,
             })
             .collect();
-        stats.signals.sort_by(|a, b| b.count.cmp(&a.count));
+        stats
+            .signals
+            .sort_by_key(|bucket| std::cmp::Reverse(bucket.count));
 
         stats.upgrades = upgrades.len();
         stats.upgrade_bytes = upgrades.iter().map(|u| u.candidate.size).sum();
@@ -183,7 +185,9 @@ impl Stats {
                 size: 0,
             })
             .collect();
-        stats.by_severity.sort_by(|a, b| b.count.cmp(&a.count));
+        stats
+            .by_severity
+            .sort_by_key(|bucket| std::cmp::Reverse(bucket.count));
 
         stats
     }

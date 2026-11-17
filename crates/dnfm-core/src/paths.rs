@@ -1,10 +1,15 @@
 //! Caminhos de estado do usuário (XDG).
 
+use std::ffi::OsString;
 use std::path::PathBuf;
 
 /// `$XDG_STATE_HOME/dnfm`, com fallback para `~/.local/state/dnfm`.
 pub fn state_dir() -> PathBuf {
-    if let Some(dir) = std::env::var_os("XDG_STATE_HOME") {
+    state_dir_from(std::env::var_os("XDG_STATE_HOME"))
+}
+
+fn state_dir_from(xdg: Option<OsString>) -> PathBuf {
+    if let Some(dir) = xdg {
         return PathBuf::from(dir).join("dnfm");
     }
     let home = std::env::var_os("HOME").unwrap_or_default();
@@ -13,7 +18,11 @@ pub fn state_dir() -> PathBuf {
 
 /// `$XDG_CACHE_HOME/dnfm`, com fallback para `~/.cache/dnfm`.
 pub fn cache_dir() -> PathBuf {
-    if let Some(dir) = std::env::var_os("XDG_CACHE_HOME") {
+    cache_dir_from(std::env::var_os("XDG_CACHE_HOME"))
+}
+
+fn cache_dir_from(xdg: Option<OsString>) -> PathBuf {
+    if let Some(dir) = xdg {
         return PathBuf::from(dir).join("dnfm");
     }
     let home = std::env::var_os("HOME").unwrap_or_default();
@@ -25,9 +34,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn respeita_xdg_state_home() {
-        std::env::set_var("XDG_STATE_HOME", "/tmp/xdg-teste");
-        assert_eq!(state_dir(), PathBuf::from("/tmp/xdg-teste/dnfm"));
-        std::env::remove_var("XDG_STATE_HOME");
+    fn respeita_xdg_state_home_sem_mutar_ambiente_global() {
+        assert_eq!(
+            state_dir_from(Some(OsString::from("/tmp/xdg-teste"))),
+            PathBuf::from("/tmp/xdg-teste/dnfm")
+        );
+    }
+
+    #[test]
+    fn respeita_xdg_cache_home_sem_mutar_ambiente_global() {
+        assert_eq!(
+            cache_dir_from(Some(OsString::from("/tmp/xdg-cache-teste"))),
+            PathBuf::from("/tmp/xdg-cache-teste/dnfm")
+        );
     }
 }

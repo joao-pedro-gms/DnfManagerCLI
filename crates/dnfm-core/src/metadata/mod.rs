@@ -228,7 +228,10 @@ pub struct TagCatalog {
 
 impl TagCatalog {
     pub fn is_empty(&self) -> bool {
-        self.appstream.is_empty() && self.desktop.is_empty() && self.files.is_empty()
+        self.appstream.is_empty()
+            && self.desktop.is_empty()
+            && self.files.is_empty()
+            && self.families.is_empty()
     }
 
     pub fn len(&self) -> usize {
@@ -412,6 +415,13 @@ mod tests {
             nevra: format!("{name}-1-1.fc45.x86_64"),
             is_installed: true,
         }
+    }
+
+    #[test]
+    fn familias_sozinhas_tornam_o_catalogo_nao_vazio() {
+        let mut catalog = TagCatalog::default();
+        catalog.families.insert("foo".into(), "Projeto Foo".into());
+        assert!(!catalog.is_empty());
     }
 
     #[test]

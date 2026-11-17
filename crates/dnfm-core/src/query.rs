@@ -7,7 +7,7 @@ use std::collections::HashSet;
 
 use crate::categories::Taxonomy;
 use crate::marks::MarkSet;
-use crate::model::{Package, Reason};
+use crate::model::{year_start, Package, Reason};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SortKey {
@@ -169,11 +169,7 @@ impl DatePreset {
             Self::Last7Days => Some(now - 7 * DAY),
             Self::Last30Days => Some(now - 30 * DAY),
             Self::Last90Days => Some(now - 90 * DAY),
-            Self::ThisYear => {
-                // Aproximação em blocos de 365 dias: suficiente para um preset.
-                let years = now.div_euclid(DAY) / 365;
-                Some(years * 365 * DAY)
-            }
+            Self::ThisYear => Some(year_start(now)),
         }
     }
 }
@@ -638,6 +634,26 @@ mod tests {
         assert_eq!(
             names(&pkgs, &out),
             vec!["zoxide".to_string(), "texlive-a".to_string()]
+        );
+    }
+
+    #[test]
+    fn preset_este_ano_comeca_em_primeiro_de_janeiro() {
+        assert_eq!(
+            DatePreset::ThisYear.since(1_781_481_600),
+            Some(1_767_225_600)
+        );
+        assert_eq!(
+            DatePreset::ThisYear.since(1_718_409_600),
+            Some(1_704_067_200)
+        );
+        assert_eq!(
+            crate::model::format_date(year_start(1_781_481_600)),
+            "2026-01-01"
+        );
+        assert_eq!(
+            crate::model::format_date(year_start(1_718_409_600)),
+            "2024-01-01"
         );
     }
 
