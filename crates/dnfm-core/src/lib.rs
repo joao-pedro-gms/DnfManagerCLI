@@ -6,6 +6,7 @@
 pub mod attrs;
 pub mod backend;
 pub mod cache;
+pub mod capability;
 pub mod categories;
 pub mod decode;
 pub mod marks;

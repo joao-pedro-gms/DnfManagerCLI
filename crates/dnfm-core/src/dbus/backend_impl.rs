@@ -1,6 +1,6 @@
 //! Implementação do contrato [`DnfBackend`] sobre a sessão do daemon.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::time::Duration;
 
 use async_trait::async_trait;
@@ -9,12 +9,18 @@ use zbus::Variant as Value;
 
 use crate::attrs::AttrReader;
 use crate::backend::{BackendError, DnfBackend};
+use crate::capability::{self, InstalledRecord};
 use crate::model::{
     Advisory, ConfirmToken, HistoryEntry, Outcome, Package, PackageDetails, Preview, ProgressEvent,
-    Repo, Upgrade,
+    Reason, Repo, Upgrade,
 };
 
 use super::{opts, strings, text, DbusBackend, TABLE_ATTRS};
+
+/// Chave estável (`nome.arch`) usada no grafo de dependências.
+fn chave_do_pacote<A: AttrReader>(attrs: &A) -> String {
+    format!("{}.{}", attrs.str_or("name", ""), attrs.str_or("arch", ""))
+}
 
 #[async_trait]
 impl DnfBackend for DbusBackend {
@@ -158,48 +164,39 @@ impl DnfBackend for DbusBackend {
             .await
             .map_err(|e| BackendError::Daemon(e.to_string()))?;
 
-        // capacidade -> pacotes que a oferecem
-        let mut providers: HashMap<String, HashSet<String>> = HashMap::new();
-        for attrs in &raw {
-            let name = attrs.str_or("name", "");
-            if let Some(provides) = attrs.get_str_list("provides") {
-                for capability in provides {
-                    providers
-                        .entry(capability)
-                        .or_default()
-                        .insert(name.clone());
-                }
-            }
-        }
-
-        let mut required: HashSet<String> = HashSet::new();
-        for attrs in &raw {
-            let name = attrs.str_or("name", "");
-            if let Some(requires) = attrs.get_str_list("requires") {
-                for capability in requires {
-                    if let Some(owners) = providers.get(&capability) {
-                        for owner in owners {
-                            if owner != &name {
-                                required.insert(owner.clone());
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // O grafo usa capabilities normalizadas: `libdrm(x86-64) = 2.4.124`
+        // (provides) e `libdrm` (requires) são a mesma capability, e rich deps
+        // como `(libnotify or libnotify4)` valem como alternativas.
+        let records: Vec<InstalledRecord> = raw
+            .iter()
+            .filter(|attrs| !attrs.str_or("name", "").is_empty())
+            .map(|attrs| InstalledRecord {
+                key: chave_do_pacote(attrs),
+                reason: Reason::parse(&attrs.str_or("reason", "")),
+                provides: attrs.get_str_list("provides").unwrap_or_default(),
+                requires: attrs.get_str_list("requires").unwrap_or_default(),
+            })
+            .collect();
+        let required = capability::required_keys(&records);
 
         let mut out = Vec::new();
+        let mut vistos = HashSet::new();
         for attrs in &raw {
-            let name = attrs.str_or("name", "");
-            if name.is_empty() || required.contains(&name) {
+            if attrs.str_or("name", "").is_empty() {
                 continue;
             }
             let mut pkg = Package::from_attrs(attrs);
-            pkg.is_installed = true;
+            let key = pkg.key();
             // Só faz sentido sugerir remoção do que entrou como dependência.
-            if !pkg.reason.is_user() {
-                out.push(pkg);
+            if required.contains(&key) || !capability::is_orphan_reason(pkg.reason) {
+                continue;
             }
+            // O mesmo nome.arch pode aparecer repetido no retorno do daemon.
+            if !vistos.insert(key) {
+                continue;
+            }
+            pkg.is_installed = true;
+            out.push(pkg);
         }
         out.sort_by_key(|p| std::cmp::Reverse(p.size));
         Ok(out)

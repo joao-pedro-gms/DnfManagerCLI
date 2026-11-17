@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use dnfm_core::categories::{group_rows, CustomCategories, GroupMode, Taxonomy};
+use dnfm_core::safety;
 use dnfm_core::{DnfBackend, Filter, MarkSet, Query, SortKey};
 
 use crate::output;
@@ -275,16 +276,32 @@ pub async fn orphans(backend: &Arc<dyn DnfBackend>, json: bool) -> i32 {
         Ok(list) => list,
         Err(err) => return report_err(&err),
     };
+    // Pacote protegido nunca é sugestão de remoção: sai da lista, mas a
+    // contagem fica à vista para a heurística não esconder o que apontou.
+    let (protegidos, list): (Vec<_>, Vec<_>) = list
+        .into_iter()
+        .partition(|p| safety::is_protected(&p.name).is_some());
+    let protected_skipped = protegidos.len();
+
     if json {
-        let payload: Vec<serde_json::Value> = list.iter().map(output::package_json).collect();
-        output::emit_json(output::envelope("orphans", serde_json::json!(payload)));
+        let payload = serde_json::json!({
+            "count": list.len(),
+            "protected_skipped": protected_skipped,
+            "packages": list.iter().map(output::package_json).collect::<Vec<_>>(),
+        });
+        output::emit_json(output::envelope("orphans", payload));
         return EXIT_OK;
     }
+    let sufixo = if protected_skipped > 0 {
+        format!(" ({protected_skipped} protegidos ignorados)")
+    } else {
+        String::new()
+    };
     if list.is_empty() {
-        println!("nenhum órfão encontrado");
+        println!("nenhum órfão encontrado{sufixo}");
         return EXIT_OK;
     }
-    println!("{} possíveis órfãos", list.len());
+    println!("{} possíveis órfãos{sufixo}", list.len());
     let marks = MarkSet::load_default();
     let taxonomy = Taxonomy::build(&list, &CustomCategories::load_default());
     output::table(
