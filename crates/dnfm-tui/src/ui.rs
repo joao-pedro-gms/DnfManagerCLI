@@ -6,13 +6,15 @@
 use dnfm_core::{format_date, format_size, Reason, SortKey};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Modifier, Style};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, BorderType, Cell, Paragraph, Row, Table, TableState, Wrap};
+use ratatui::text::Span;
+use ratatui::widgets::{Block, BorderType, Cell, Row, Table, TableState};
 use ratatui::Frame;
 
 use crate::app::{App, ChipClear, Modal, RowRef, Tab};
 use crate::theme::Theme;
 
+mod detail;
+mod footer;
 mod header;
 mod inspector;
 mod modals;
@@ -48,8 +50,8 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         }
     }
 
-    draw_details(frame, app, detalhes);
-    draw_footer(frame, app, rodape);
+    detail::draw_details(frame, app, detalhes);
+    footer::draw_footer(frame, app, rodape);
 
     // Sobreposições: campo de categoria, seletor/painel de filtros, modal.
     if app.assign_input.is_some() {
@@ -422,258 +424,6 @@ fn package_row(app: &App, pkg: &dnfm_core::Package, theme: &Theme) -> Row<'stati
             _ => Style::default().fg(theme.dim),
         }),
     ])
-}
-
-fn draw_details(frame: &mut Frame, app: &App, area: Rect) {
-    let theme = app.theme.clone();
-    let block = Block::bordered()
-        .title(Span::styled(" detalhes ", Style::default().fg(theme.dim)))
-        .border_type(BorderType::Rounded)
-        .border_style(theme.border());
-    let mut lines: Vec<Line> = Vec::new();
-
-    if let Some(pkg) = app.current_package() {
-        lines.push(Line::from(vec![
-            Span::styled(
-                pkg.name.clone(),
-                Style::default().fg(theme.text).add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(format!("  {}", pkg.evr), Style::default().fg(theme.dim)),
-            Span::styled(format!("  ·  {}", pkg.arch), Style::default().fg(theme.dim)),
-        ]));
-        lines.push(Line::from(vec![Span::styled(
-            pkg.summary.clone(),
-            Style::default().fg(theme.text),
-        )]));
-        let detalhes = app.details.as_ref().filter(|d| d.nevra == pkg.nevra);
-        if detalhes.is_none() {
-            lines.push(Line::from(Span::styled(
-                "enter: descrição, licença e URL",
-                Style::default().fg(theme.dim),
-            )));
-        }
-        if let Some(details) = detalhes {
-            if !details.description.is_empty() {
-                let desc: String = details
-                    .description
-                    .lines()
-                    .filter(|l| !l.trim().is_empty())
-                    .collect::<Vec<_>>()
-                    .join(" ");
-                lines.push(Line::from(Span::styled(
-                    desc,
-                    Style::default().fg(theme.dim),
-                )));
-            }
-            let mut meta: Vec<Span> = Vec::new();
-            if !details.license.is_empty() {
-                meta.push(Span::styled(
-                    format!("licença {}", details.license),
-                    Style::default().fg(theme.dim),
-                ));
-            }
-            if !details.vendor.is_empty() {
-                meta.push(Span::styled(
-                    format!("  ·  {}", details.vendor),
-                    Style::default().fg(theme.dim),
-                ));
-            }
-            if !details.url.is_empty() {
-                meta.push(Span::styled(
-                    format!("  ·  {}", details.url),
-                    Style::default().fg(theme.accent),
-                ));
-            }
-            if !meta.is_empty() {
-                lines.push(Line::from(meta));
-            }
-        }
-        let mut avisos: Vec<Span> = Vec::new();
-        if let Some(mark) = app.marks.get(&pkg.name, &pkg.arch) {
-            avisos.push(Span::styled(
-                format!("marcado em {}", format_date(mark.marked_at)),
-                Style::default().fg(theme.mark),
-            ));
-        }
-        if let Some(reason) = dnfm_core::safety::is_protected(&pkg.name) {
-            avisos.push(Span::styled(
-                format!("  protegido: {reason}"),
-                Style::default().fg(theme.danger),
-            ));
-        }
-        if let Some(propria) = app.custom_categories.get(&pkg.name, &pkg.arch) {
-            avisos.push(Span::styled(
-                format!("  categoria própria: {propria}"),
-                Style::default().fg(theme.accent_alt),
-            ));
-        }
-        if !avisos.is_empty() {
-            lines.push(Line::from(avisos));
-        }
-    } else if let Some(up) = app.current_upgrade() {
-        lines.push(Line::from(vec![
-            Span::styled(
-                up.installed.name.clone(),
-                Style::default().fg(theme.text).add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(
-                format!("  {} → ", up.installed.evr),
-                Style::default().fg(theme.dim),
-            ),
-            Span::styled(up.candidate.evr.clone(), Style::default().fg(theme.ok)),
-        ]));
-        lines.push(Line::from(up.candidate.summary.clone()));
-        if let Some(advisory) = &up.advisory {
-            lines.push(Line::from(Span::styled(
-                format!("advisory {advisory} · {}", up.severity.label()),
-                Style::default().fg(theme.warn),
-            )));
-        }
-    } else if let Some(RowRef::Header { label, count, .. }) = app.current_row() {
-        lines.push(Line::from(vec![
-            Span::styled(
-                label.clone(),
-                Style::default()
-                    .fg(theme.accent)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(
-                format!("  {count} pacote(s)"),
-                Style::default().fg(theme.dim),
-            ),
-        ]));
-        lines.push(Line::from(Span::styled(
-            "espaço recolhe o grupo · a marca o grupo inteiro · clique no sidebar filtra",
-            Style::default().fg(theme.dim),
-        )));
-    } else {
-        lines.push(Line::from(Span::styled(
-            "nada selecionado",
-            Style::default().fg(theme.dim),
-        )));
-    }
-
-    frame.render_widget(
-        Paragraph::new(lines).wrap(Wrap { trim: true }).block(block),
-        area,
-    );
-}
-
-fn draw_footer(frame: &mut Frame, app: &App, area: Rect) {
-    let theme = app.theme.clone();
-    let status_style = if app.loading {
-        Style::default().fg(theme.warn)
-    } else if app.status.contains("protegido") || app.status.contains("falhou") {
-        Style::default().fg(theme.danger)
-    } else {
-        Style::default().fg(theme.text)
-    };
-
-    let esquerda = if let Some(buffer) = &app.search {
-        Line::from(vec![
-            Span::styled("buscar ", Style::default().fg(theme.dim)),
-            Span::styled(
-                format!("/{buffer}"),
-                Style::default()
-                    .fg(theme.accent)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled("▏", Style::default().fg(theme.accent)),
-            Span::styled("  enter aplica · esc limpa", Style::default().fg(theme.dim)),
-        ])
-    } else {
-        let mut spans = vec![
-            Span::styled(
-                if app.loading {
-                    format!("{} ", app.anim.spinner())
-                } else {
-                    "● ".to_string()
-                },
-                Style::default().fg(if app.loading { theme.warn } else { theme.ok }),
-            ),
-            Span::styled(app.status.clone(), status_style),
-            Span::styled("   ", Style::default()),
-            Span::styled(
-                format!("ordenar: {}", app.sort.label()),
-                Style::default().fg(theme.dim),
-            ),
-            Span::styled("  ·  ", Style::default().fg(theme.dim)),
-            Span::styled(
-                format!("grupo: {}", app.group.label()),
-                Style::default().fg(theme.dim),
-            ),
-            Span::styled("  ·  ", Style::default().fg(theme.dim)),
-            Span::styled(
-                format!("filtros: {}", app.filter.active_count()),
-                Style::default().fg(if app.filter.is_active() {
-                    theme.accent
-                } else {
-                    theme.dim
-                }),
-            ),
-            Span::styled("  ·  ", Style::default().fg(theme.dim)),
-            Span::styled(app.selection_label(), Style::default().fg(theme.dim)),
-        ];
-        if app.loading {
-            spans.push(Span::styled(
-                format!("  {}", app.anim.spinner()),
-                Style::default().fg(theme.warn),
-            ));
-        }
-        Line::from(spans)
-    };
-
-    frame.render_widget(Paragraph::new(vec![esquerda, keybar(app, &theme)]), area);
-}
-
-fn keybar<'a>(app: &App, theme: &Theme) -> Line<'a> {
-    let mut spans: Vec<Span<'a>> = Vec::new();
-    let mut push = |key: &'a str, desc: &'a str| {
-        spans.push(Span::styled(
-            format!(" {key} "),
-            Style::default()
-                .fg(theme.text)
-                .bg(theme.surface_alt)
-                .add_modifier(Modifier::BOLD),
-        ));
-        spans.push(Span::styled(
-            format!(" {desc}  "),
-            Style::default().fg(theme.dim),
-        ));
-    };
-
-    match app.tab {
-        Tab::Installed | Tab::Orphans => {
-            push("␣", "marcar");
-            push("t", "categoria");
-            push("f", "filtros");
-            push("o", "agrupar");
-            push("[ ]", "grupos");
-            push("p", "preview");
-            push("/", "buscar");
-        }
-        Tab::Updates => {
-            push("␣", "selecionar");
-            push("!", "só segurança");
-            push("P", "atualizar");
-            push("r", "recarregar");
-        }
-        Tab::History => {
-            push("r", "recarregar");
-            push("tab", "abas");
-        }
-        Tab::Repos => {
-            push("r", "recarregar");
-            push("tab", "abas");
-        }
-        Tab::Stats => {
-            push("r", "recalcular");
-            push("tab", "abas");
-        }
-    }
-    push("?", "ajuda");
-    push("q", "sair");
-    Line::from(spans)
 }
 
 /// Chips visíveis, exportado para os testes conferirem a barra de filtros.
