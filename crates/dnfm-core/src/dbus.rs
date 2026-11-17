@@ -207,34 +207,41 @@ impl DbusBackend {
             ]))
             .await?;
 
-        let mut out = Vec::with_capacity(installed.len());
-        for old in installed {
-            let Some(new) = candidates
-                .iter()
-                .find(|c| c.name == old.name && c.arch == old.arch)
-                .cloned()
-            else {
-                continue;
-            };
-            let (severity, advisory) =
-                match self.advisories_for(std::slice::from_ref(&old.name)).await {
-                    Ok(list) => list
-                        .into_iter()
-                        .max_by_key(|a| a.severity)
-                        .map(|a| (a.severity, Some(a.id)))
-                        .unwrap_or((Severity::Unknown, None)),
-                    Err(_) => (Severity::Unknown, None),
-                };
-            out.push(Upgrade {
-                installed: Package {
-                    is_installed: true,
-                    ..old
-                },
-                candidate: new,
-                severity,
-                advisory,
-            });
-        }
+        let pares = installed
+            .into_iter()
+            .filter_map(|old| {
+                candidates
+                    .iter()
+                    .find(|candidate| candidate.name == old.name && candidate.arch == old.arch)
+                    .cloned()
+                    .map(|new| (old, new))
+            })
+            .collect::<Vec<_>>();
+
+        let out = futures_util::stream::iter(pares)
+            .map(|(old, new)| async move {
+                let (severity, advisory) =
+                    match self.advisories_for(std::slice::from_ref(&old.name)).await {
+                        Ok(list) => list
+                            .into_iter()
+                            .max_by_key(|advisory| advisory.severity)
+                            .map(|advisory| (advisory.severity, Some(advisory.id)))
+                            .unwrap_or((Severity::Unknown, None)),
+                        Err(_) => (Severity::Unknown, None),
+                    };
+                Upgrade {
+                    installed: Package {
+                        is_installed: true,
+                        ..old
+                    },
+                    candidate: new,
+                    severity,
+                    advisory,
+                }
+            })
+            .buffer_unordered(8)
+            .collect()
+            .await;
         Ok(out)
     }
 }
