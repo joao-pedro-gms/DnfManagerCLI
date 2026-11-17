@@ -113,6 +113,16 @@ pub async fn remove(backend: &Arc<dyn DnfBackend>, opts: RemoveOptions) -> i32 {
         return EXIT_ERROR;
     }
 
+    // A blocklist vale para todo pedido do usuário, incluindo os de
+    // --from-marks. Dependências que o solver arrasta não são conferidas aqui;
+    // quem cobre isso é o próprio resolvedor, na prévia abaixo.
+    for spec in &specs {
+        if let Some(motivo) = dnfm_core::safety::is_protected(spec) {
+            eprintln!("dnfm: {spec} é protegido ({motivo})");
+            return EXIT_PROBLEMS;
+        }
+    }
+
     let preview = match backend.preview_remove(&specs).await {
         Ok(preview) => preview,
         Err(err) => return report_err(&err),

@@ -107,3 +107,35 @@ fn busca_filtra_a_lista_visivel() {
     assert_eq!(app.visible.len(), 1);
     assert_eq!(app.current_package().unwrap().name, "firefox");
 }
+
+#[test]
+fn preview_de_protegido_nao_gera_comando() {
+    let mut app = app_with(vec![pkg("glibc", Reason::Dependency)]);
+    app.loading = false;
+    assert!(
+        app.request_preview().is_none(),
+        "protegido não pode gerar Cmd::Preview"
+    );
+    assert!(app.status.contains("protegido"), "status: {}", app.status);
+    assert!(!app.loading, "nada entra em resolução");
+    assert!(app.pending_specs.is_empty(), "nenhum pedido pendente");
+}
+
+#[test]
+fn preview_descarta_protegidos_que_estejam_nas_marcas() {
+    // Marcação que escapou (arquivo editado à mão) conta protegido no pedido.
+    let mut app = app_with(vec![
+        pkg("glibc", Reason::Dependency),
+        pkg("vlc", Reason::User),
+    ]);
+    app.marks
+        .mark("glibc", "x86_64", "glibc-1-1.fc45.x86_64", None);
+    app.marks.mark("vlc", "x86_64", "vlc-1-1.fc45.x86_64", None);
+    let cmd = app.request_preview();
+    assert!(
+        matches!(cmd, Some(Cmd::Preview(v)) if v == vec!["vlc"]),
+        "só o permitido segue para o preview"
+    );
+    assert!(app.status.contains("protegido"), "status: {}", app.status);
+    assert_eq!(app.pending_specs, vec!["vlc"]);
+}

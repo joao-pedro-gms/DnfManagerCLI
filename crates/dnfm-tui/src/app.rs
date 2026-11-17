@@ -290,10 +290,28 @@ impl App {
             self.status = "nada selecionado para remover".to_string();
             return None;
         }
+        // A blocklist se aplica ao pedido: protegidos saem da lista antes de
+        // qualquer resolução. Dependências arrastadas pelo solver não são
+        // conferidas aqui.
+        let mut recusados: Vec<String> = Vec::new();
+        let mut permitidos: Vec<String> = Vec::new();
+        for spec in specs {
+            match dnfm_core::safety::protected_reason(&spec, None) {
+                Some(motivo) => recusados.push(format!("{spec} é protegido ({motivo})")),
+                None => permitidos.push(spec),
+            }
+        }
+        if permitidos.is_empty() {
+            self.status = format!("remoção recusada: {}", recusados.join("; "));
+            return None;
+        }
         self.loading = true;
-        self.pending_specs = specs.clone();
-        self.status = format!("resolvendo remoção de {} pacote(s)…", specs.len());
-        Some(Cmd::Preview(specs))
+        self.pending_specs = permitidos.clone();
+        self.status = format!("resolvendo remoção de {} pacote(s)…", permitidos.len());
+        if !recusados.is_empty() {
+            self.status = format!("{} (ignorados: {})", self.status, recusados.join("; "));
+        }
+        Some(Cmd::Preview(permitidos))
     }
 
     pub fn open_modal(&mut self, modal: Modal) {
