@@ -12,6 +12,12 @@ use crate::theme::Theme;
 
 const BAR_WIDTH: usize = 12;
 
+#[derive(Debug, Clone, Copy)]
+struct BucketOpts {
+    com_tamanho: bool,
+    limite: usize,
+}
+
 pub fn draw(frame: &mut Frame, app: &mut App, area: Rect) {
     app.ensure_stats();
     let stats = app.stats.clone();
@@ -29,7 +35,7 @@ pub fn draw(frame: &mut Frame, app: &mut App, area: Rect) {
     ])
     .areas(direita);
 
-    draw_resumo(frame, &theme, resumo, &stats, app);
+    draw_resumo(frame, &theme, resumo, &stats);
     draw_buckets(
         frame,
         &theme,
@@ -37,8 +43,10 @@ pub fn draw(frame: &mut Frame, app: &mut App, area: Rect) {
         "CATEGORIAS",
         &stats.by_category,
         stats.total,
-        true,
-        14,
+        BucketOpts {
+            com_tamanho: true,
+            limite: 14,
+        },
     );
     draw_buckets(
         frame,
@@ -47,14 +55,16 @@ pub fn draw(frame: &mut Frame, app: &mut App, area: Rect) {
         "O QUE É CADA PACOTE",
         &stats.signals,
         stats.total,
-        false,
-        10,
+        BucketOpts {
+            com_tamanho: false,
+            limite: 10,
+        },
     );
     draw_biggest(frame, &theme, maiores, &stats);
     draw_updates(frame, &theme, atualizacoes, &stats);
 }
 
-fn draw_resumo(frame: &mut Frame, theme: &Theme, area: Rect, stats: &Stats, app: &App) {
+fn draw_resumo(frame: &mut Frame, theme: &Theme, area: Rect, stats: &Stats) {
     let mut linhas = vec![
         campo(theme, "pacotes instalados", &reais(stats.total)),
         campo(theme, "nomes únicos", &reais(stats.unique_names)),
@@ -85,7 +95,7 @@ fn draw_resumo(frame: &mut Frame, theme: &Theme, area: Rect, stats: &Stats, app:
                 pct(stats.with_files, stats.total)
             ),
         ),
-        motivo_linha(theme, stats, app),
+        motivo_linha(theme, stats),
     ];
     linhas.truncate(area.height.saturating_sub(2) as usize);
     frame.render_widget(
@@ -94,14 +104,13 @@ fn draw_resumo(frame: &mut Frame, theme: &Theme, area: Rect, stats: &Stats, app:
     );
 }
 
-fn motivo_linha<'a>(theme: &Theme, stats: &Stats, app: &App) -> Line<'a> {
+fn motivo_linha<'a>(theme: &Theme, stats: &Stats) -> Line<'a> {
     let texto = stats
         .by_reason
         .iter()
         .map(|b| format!("{} {}", b.count, b.label))
         .collect::<Vec<_>>()
         .join(" · ");
-    let _ = app;
     Line::from(vec![
         Span::styled("  motivo          ", Style::default().fg(theme.dim)),
         Span::styled(texto, Style::default().fg(theme.text)),
@@ -115,12 +124,11 @@ fn draw_buckets(
     titulo: &str,
     buckets: &[Bucket],
     total: usize,
-    com_tamanho: bool,
-    limite: usize,
+    opts: BucketOpts,
 ) {
     let altura = area.height.saturating_sub(2) as usize;
     let mut linhas: Vec<Line> = Vec::new();
-    for bucket in buckets.iter().take(limite).take(altura) {
+    for bucket in buckets.iter().take(opts.limite).take(altura) {
         let share = bucket.share(total);
         let mut spans = vec![
             Span::styled(" ", Style::default()),
@@ -138,7 +146,7 @@ fn draw_buckets(
                 Style::default().fg(theme.dim),
             ),
         ];
-        if com_tamanho {
+        if opts.com_tamanho {
             spans.push(Span::styled(
                 format!(" {:>9}", format_size(bucket.size)),
                 Style::default().fg(theme.dim),
@@ -173,7 +181,7 @@ fn draw_biggest(frame: &mut Frame, theme: &Theme, area: Rect, stats: &Stats) {
             ),
             Span::styled(
                 if bucket.count > 1 {
-                    format!("  {:>7}", format!("{} arq.", bucket.count))
+                    format!("  {:>7}", versoes_label(bucket.count))
                 } else {
                     String::new()
                 },
@@ -200,6 +208,10 @@ fn draw_updates(frame: &mut Frame, theme: &Theme, area: Rect, stats: &Stats) {
         Paragraph::new(linhas).block(bloco(theme, "ATUALIZAÇÕES", theme.ok)),
         area,
     );
+}
+
+fn versoes_label(count: usize) -> String {
+    format!("{count} {}", if count == 1 { "versão" } else { "versões" })
 }
 
 fn campo<'a>(theme: &Theme, rotulo: &str, valor: &str) -> Line<'a> {
@@ -261,6 +273,12 @@ fn truncar(texto: &str, max: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rotula_versoes_no_pacote_colapsado() {
+        assert_eq!(versoes_label(1), "1 versão");
+        assert_eq!(versoes_label(2), "2 versões");
+    }
 
     #[test]
     fn barra_respeita_a_largura() {

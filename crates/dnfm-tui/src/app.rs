@@ -341,14 +341,13 @@ impl App {
         None
     }
 
-    /// Avança a animação; devolve `true` se a tela precisa ser redesenhada.
-    pub fn on_tick(&mut self) -> bool {
-        let animating = self.anim.tick();
+    /// Avança a animação e conclui o fechamento do modal quando necessário.
+    pub fn on_tick(&mut self) {
+        self.anim.tick();
         if self.anim.closing && self.anim.modal <= 0.0 {
             self.modal = None;
             self.anim.closing = false;
         }
-        animating
     }
 
     /// Leva as animações ao fim (usado nos testes e ao trocar de tela).

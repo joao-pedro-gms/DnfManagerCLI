@@ -112,31 +112,8 @@ impl Theme {
         Self::from(self.palette.next())
     }
 
-    pub fn title(&self) -> Style {
-        Style::default().fg(self.text).add_modifier(Modifier::BOLD)
-    }
-
-    pub fn subtle(&self) -> Style {
-        Style::default().fg(self.dim)
-    }
-
-    pub fn selected(&self) -> Style {
-        Style::default()
-            .fg(Color::Black)
-            .bg(self.accent)
-            .add_modifier(Modifier::BOLD)
-    }
-
-    pub fn hover(&self) -> Style {
-        Style::default().bg(self.surface_alt)
-    }
-
     pub fn border(&self) -> Style {
         Style::default().fg(self.dim)
-    }
-
-    pub fn border_focus(&self) -> Style {
-        Style::default().fg(self.accent)
     }
 
     /// Cor de fundo da linha selecionada na tabela.

@@ -192,7 +192,14 @@ fn table_layout(tab: Tab) -> (Vec<&'static str>, Vec<Constraint>) {
                 Constraint::Min(20),
             ],
         ),
-        Tab::Stats => (vec![" ", "métrica", "valor"], vec![Constraint::Min(20)]),
+        Tab::Stats => (
+            vec![" ", "métrica", "valor"],
+            vec![
+                Constraint::Length(3),
+                Constraint::Min(20),
+                Constraint::Min(12),
+            ],
+        ),
         Tab::Repos => (
             vec!["id", "nome", "estado"],
             vec![
