@@ -2,7 +2,8 @@
 
 use dnfm_core::{format_date, format_size, HistoryEntry, Package, Repo, Severity, Upgrade};
 
-pub const SCHEMA_VERSION: u32 = 1;
+// A v2 alterou o payload JSON de órfãos para um objeto com metadados.
+pub const SCHEMA_VERSION: u32 = 2;
 
 /// Imprime uma tabela alinhada; a última coluna não é truncada.
 pub fn table(headers: &[&str], rows: Vec<Vec<String>>) {
@@ -144,10 +145,31 @@ pub fn repo_json(repo: &Repo) -> serde_json::Value {
 }
 
 pub fn emit_json(value: serde_json::Value) {
-    println!(
-        "{}",
-        serde_json::to_string_pretty(&value).unwrap_or_else(|_| "{}".to_string())
-    );
+    println!("{}", json_text(&value));
+}
+
+fn json_text(value: &serde_json::Value) -> String {
+    let Some(object) = value.as_object() else {
+        return serde_json::to_string_pretty(value).unwrap_or_else(|_| "{}".to_string());
+    };
+    let Some(schema_version) = object.get("schema_version") else {
+        return serde_json::to_string_pretty(value).unwrap_or_else(|_| "{}".to_string());
+    };
+
+    let mut remaining = object.clone();
+    remaining.remove("schema_version");
+    let remaining = serde_json::to_string_pretty(&serde_json::Value::Object(remaining))
+        .unwrap_or_else(|_| "{}".to_string());
+    let version = serde_json::to_string(schema_version).unwrap_or_else(|_| "null".to_string());
+    let schema_key = serde_json::to_string("schema_version").unwrap_or_default();
+    if remaining == "{}" {
+        return format!("{{\n  {schema_key}: {version}\n}}");
+    }
+    let body = remaining
+        .strip_prefix("{\n")
+        .and_then(|text| text.strip_suffix("\n}"))
+        .unwrap_or("");
+    format!("{{\n  {schema_key}: {version},\n{body}\n}}")
 }
 
 pub fn envelope(command: &str, payload: serde_json::Value) -> serde_json::Value {
@@ -157,4 +179,19 @@ pub fn envelope(command: &str, payload: serde_json::Value) -> serde_json::Value 
         "generated_at": dnfm_core::marks::now_unix(),
         "data": payload,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn envelope_emite_schema_version_no_inicio() {
+        let value = envelope("orphans", serde_json::json!({"count": 0}));
+        let prefix = format!(
+            "{{\n  {}: 2,",
+            serde_json::to_string("schema_version").unwrap()
+        );
+        assert!(json_text(&value).starts_with(&prefix));
+    }
 }
